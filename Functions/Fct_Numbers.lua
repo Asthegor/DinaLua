@@ -1,7 +1,7 @@
 local Fct_Numbers = {
-  _VERSION     = 'Love2D Game Engine Fct_Numbers v1.1.0',
-  _DESCRIPTION = 'Fct_Numbers in Love2D Game Engine',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/functions/fct_numbers/',
+  _VERSION     = 'Dina GE Fct_Numbers v1.0',
+  _DESCRIPTION = 'Fct_Numbers in Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/functions/fct_numbers/',
   _LICENSE     = [[
     MIT LICENSE
 

@@ -1,7 +1,7 @@
 local MenuManager = {
-  _VERSION     = 'Love2D Game Engine Menu Manager v1.1.0',
-  _DESCRIPTION = 'Menu Manager in Love2D Game Engine',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/managers/menumanager/',
+  _VERSION     = 'Dina GE Menu Manager v1.0',
+  _DESCRIPTION = 'Menu Manager in Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/managers/menumanager/',
   _LICENSE     = [[
     MIT LICENSE
 

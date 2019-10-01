@@ -1,6 +1,6 @@
 local Text = {
-  _VERSION     = 'Love2D Game Engine Text Template v1.1.0',
-  _DESCRIPTION = 'Text Template in Love2D Game Engine',
+  _VERSION     = 'Dina GE Text Template v1.0',
+  _DESCRIPTION = 'Text Template in Dina GE',
   _URL         = 'https://love2dge.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
     MIT LICENSE

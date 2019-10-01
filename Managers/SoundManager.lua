@@ -1,7 +1,7 @@
 local SoundManager = {
-  _VERSION     = 'Love2D Game Engine Sound Manager v1.1.0',
-  _DESCRIPTION = 'Sounds and Musics Manager in Love2D Game Engine',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/managers/soundmanager/',
+  _VERSION     = 'Dina GE Sound Manager v1.0',
+  _DESCRIPTION = 'Sounds and Musics Manager in Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/managers/soundmanager/',
   _LICENSE     = [[
     MIT LICENSE
 

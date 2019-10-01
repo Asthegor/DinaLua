@@ -1,7 +1,7 @@
 local GameEngine = {
-  _VERSION     = 'Love2D Game Engine v1.1.0',
-  _DESCRIPTION = 'Love2D Game Engine',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/gameengine/',
+  _VERSION     = 'Dina GE v1.0',
+  _DESCRIPTION = 'Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/gameengine/',
   _LICENSE     = [[
     MIT LICENSE
 

@@ -1,7 +1,7 @@
 local Sound = {
-  _VERSION     = 'Love2D Game Engine Sound Template v1.1.0',
-  _DESCRIPTION = 'Sound Template in Love2D Game Engine',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/templates/sound/',
+  _VERSION     = 'Dina GE Sound Template v1.0',
+  _DESCRIPTION = 'Sound Template in Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/templates/sound/',
   _LICENSE     = [[
     MIT LICENSE
 
