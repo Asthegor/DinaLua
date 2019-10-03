@@ -33,21 +33,21 @@ proto const MenuManager.New()
 ]]--
 function MenuManager.New()
   local self = setmetatable({}, MenuManager)
-  self.GameEngine = require("L2DGE")
+  self.GameEngine = require("DinaGE")
   self.Components = {}
   return self
 end
 
 --[[
 proto MenuManager:AddComponent(ComponentName, ComponentType, ...)
-.D This function add a new component, defined by its given name, to the menu.
+.D This function add a new component, defined by its given name, to the menu. Cannot add a MenuManager to the components
 .P ComponentName
 Name of the component to add to the menu.
 .P ComponentType
-Type of the component to add to the menu.
+Type of the component to add to the menu. Cannot be "MenuManager".
 .P ...
 Other arguments needed to create the component.
-.R Returns an new instance of the component.
+.R Returns a new instance of the component.
 ]]--
 function MenuManager:AddComponent(ComponentName, ComponentType, ...)
   local component = self.GameEngine.GetComponent(ComponentType, ...)
@@ -89,16 +89,12 @@ Time before displaying the title.
 .P NbLoop
 Number of times the title will be displayed
 ]]--
-function MenuManager:SetTitle(Content, PosX, PosY, FontName, FontSize, DisplayTime, WaitTime, NbLoop)
+function MenuManager:SetTitle(Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X, Y)
   if type(Content) == "table" then
-    self.title = self:AddComponent("Title", "Text", Content)
+    self:AddComponent("Title", "Text", Content)
     return
   end
-  self.title = self:AddComponent("Title", "Text")
-  self.title:SetFont(FontName, FontSize)
-  self.title:SetContent(Content)
-  self.title:SetPosition(PosX, PosY)
-  self.title:SetTimers(DisplayTime, WaitTime, NbLoop)
+  self:AddComponent("Title", "Text", Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X, Y)
 end
 
 --[[
@@ -109,18 +105,11 @@ Deltatime
 ]]--
 function MenuManager:Update(dt)
   local components = self.Components
-  for key, component in pairs(components) do
-    local err, result = pcall(component.Update, component, dt)
+  for _, component in pairs(components) do
+    if component.Update then
+      component:Update(dt)
+    end
   end
-end
-
---[[
-proto MenuManager:UpdateTitleContent(NewContent)
-.D This function allows to modify the title.
-.P NewContent
-The new content of the title.
-]]--
-function MenuManager:UpdateTitleContent(NewContent)
 end
 
 --[[
@@ -130,7 +119,9 @@ proto MenuManager:Draw()
 function MenuManager:Draw()
   local components = self.Components
   for key, component in pairs(components) do
-    local err, result = pcall(component.Draw, component, dt)
+    if component.Draw then
+      component:Draw()
+    end
   end
 end
 
@@ -147,7 +138,7 @@ Number of times the sound must be played. 0 means never and -1 means always (def
 ]]--
 function MenuManager:PlaySound(Name, NbLoop)
   local sound = self:GetComponentByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:Play()
   end
 end
@@ -162,7 +153,7 @@ Number of times the sound must be played. 0 means never and -1 means always (def
 ]]--
 function MenuManager:SetSoundLooping(Name, NbLoop)
   local sound = self:GetComponentByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:SetLooping(NbLoop)
   end
 end
@@ -171,8 +162,7 @@ proto MenuManager:StopAll()
 .D This function stop all musics and sounds.
 ]]--
 function MenuManager:StopAllSounds()
-  local components = self.Components
-  for key, component in pairs(components) do
+  for _, component in pairs(self.Components) do
     if tostring(component) == "Sound" then
       component:Stop()
     end
@@ -187,7 +177,7 @@ Name to retreive the sound.
 ]]--
 function MenuManager:StopSound(Name)
   local sound = self:GetComponentByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:Stop()
   end
 end

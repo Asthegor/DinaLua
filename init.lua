@@ -69,14 +69,14 @@ Arguments to send to the component constructor. Can be none.
 .R Returns the component initialized with the arguments.
 ]]--
 function GameEngine.GetComponent(ComponentName, ...)
-  if ComponentName == nil then
+  if not ComponentName then
     return nil
   end
-  if GameEngineFiles == nil then
+  if not GameEngineFiles then
     LoadGameEngineFiles()
   end
   local RequirePath = GameEngineFiles[string.lower(ComponentName)]
-  if RequirePath ~= nil then
+  if RequirePath then
     local Component = require(RequirePath)
     local newComponent = Component.New(...)
     table.insert(Components, newComponent)
@@ -94,20 +94,22 @@ Delta time.
 function GameEngine.Update(dt)
   for index = 1, #Components do
     local component = Components[index]
-    local err, result = pcall(component.Update, component, dt)
+    if component.Update then
+      component:Update(dt)
+    end
   end
 end
 
 --[[
-proto GameEngine.Update(dt)
+proto GameEngine.Draw()
 .D This function launch the Draw function of all components created by GetComponent.
-.P dt
-Delta time.
 ]]--
 function GameEngine.Draw()
   for index = 1, #Components do
     local component = Components[index]
-    local err, result = pcall(component.Draw, component)
+    if component.Draw then
+      component:Draw()
+    end
   end
 end
 

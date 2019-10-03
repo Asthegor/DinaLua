@@ -38,12 +38,7 @@ Max limit value.
 .R Return true if Num is above or equal of Min and below or equal of Max; false otherwise.
 ]]--
 function IsInLimits(Num, Min, Max)
-  if IsNumber(Num) and IsNumber(Min) and IsNumber(Max) then 
-    if Min <= Num and Num <= Max then
-      return true
-    end
-  end
-  return false
+  return IsNumber(Num) and IsNumber(Min) and IsNumber(Max) and Min <= Num and Num <= Max
 end
 
 --[[
@@ -67,8 +62,5 @@ Default value.
 .R Return Default if Data is not a number; return Data otherwise.
 ]]--
 function SetDefaultNumber(Data, Default)
-  if not IsNumber(Data) then
-    return Default
-  end
-  return Data
+  return IsNumber(Data) and Data or Default
 end

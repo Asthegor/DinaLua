@@ -1,7 +1,7 @@
 local Text = {
   _VERSION     = 'Dina GE Text Template v1.0',
   _DESCRIPTION = 'Text Template in Dina GE',
-  _URL         = 'https://love2dge.lacombedominique.com/documentation/templates/text/',
+  _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
     MIT LICENSE
 
@@ -81,9 +81,9 @@ proto Text:Draw()
 function Text:Draw()
   if self.isVisible == true then
     local oldFont = love.graphics.getFont()
-    if self.font ~= nil then love.graphics.setFont(self.font) end
+    if self.font then love.graphics.setFont(self.font) end
     love.graphics.print(self.content, self.posX, self.posY)
-    if self.font ~= nil then love.graphics.setFont(oldFont) end
+    if self.font then love.graphics.setFont(oldFont) end
   end
 end
 
@@ -94,7 +94,7 @@ proto Text:GetFont()
 ]]--
 function Text:GetFont()
   local font = self.font
-  if font == nil then
+  if not font then
     font = love.graphics.getFont()
   end
   return font
@@ -106,7 +106,7 @@ proto Text:GetHeight()
 .R Height of the text
 ]]--
 function Text:GetHeight()
-  if self.content == nil then
+  if not self.content then
     return 0
   end
   local font = self:GetFont()
@@ -119,7 +119,7 @@ proto Text:GetWidth()
 .R Width of the text
 ]]--
 function Text:GetWidth()
-  if self.content == nil then
+  if not self.content then
     return 0
   end
   local font = self:GetFont()
@@ -141,7 +141,7 @@ proto Text:SetContent(Content)
 Text to display.
 ]]--
 function Text:SetContent(Content)
-  if Content == nil then
+  if not Content then
     Content = ""
   end
   if Content == "" then
@@ -159,9 +159,10 @@ Path and name of the font to use to display the text. Should not be nil.
 Font size of the text.
 ]]--
 function Text:SetFont(FontName, FontSize)
-  if FontName ~= nil then
-    self.font = love.graphics.newFont(FontName, FontSize)
+  if FontName then
     self.fontname = FontName
+    self.fontsize = FontSize
+    self.font = love.graphics.newFont(FontName, FontSize)
   end
 end
 
@@ -171,8 +172,9 @@ proto Text:SetNewSize(Size)
 .P Size
 New font size.
 ]]--
-function Text:SetNewSize(Size)
-  if self.font ~= nil then
+function Text:SetFontSize(Size)
+  if self.fontname then
+    self.fontsize = Size
     self.font = love.graphics.newFont(self.fontname, Size)
   end
 end
@@ -235,7 +237,7 @@ Delta time.
 ]]
 function Text:UpdateVisibility(dt)
   self.isVisible = false
-  if self.nbloop ~= 0 then
+  if self.nbloop then
     if self.waitTime <= 0 and self.displayTime < 0 then
       self.isVisible = true
       return
@@ -267,7 +269,7 @@ function Text:UpdateVisibility(dt)
         end --self.displayTime >= 0
       end --self.timerWait < 0
     end --self.waitTime <= 0 and self.displayTime < 0
-  end --self.nbloop ~= 0
+  end --self.nbloop
 end
 
 Text.__call = function() return Text.New() end

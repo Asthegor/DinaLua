@@ -46,28 +46,27 @@ Volume of the sound. Normal sound is 1 (default).
 function Sound.New(File, Type, NbLoop, Volume)
   local self = setmetatable({}, Sound)
   if type(File) == "table" then
-    if File["File"] ~= nil then
+    if File["File"] then
       local Type = File["Type"]
-      if Type == nil or Type == "" then
+      if not Type or Type == "" then
         Type = "stream"
       end
       self.source = love.audio.newSource(File["File"], Type)
+      self:SetLooping(File["NbLoop"])
+      self:SetVolume(SetDefaultNumber(File["Volume"], 1))
+      return self
     end
-    self:SetLooping(File["NbLoop"])
-    local volume = SetDefaultNumber(File["Volume"], 1)
-    self:SetVolume(File["Volume"])
-    return self
   end
-  if File ~= nil then
-    if Type == nil or Type == "" then
+  if File then
+    if not Type or Type == "" then
       Type = "stream"
     end
     self.source = love.audio.newSource(File, Type)
+    self:SetLooping(NbLoop)
+    self:SetVolume(SetDefaultNumber(Volume, 1))
+    return self
   end
-  self:SetLooping(NbLoop)
-  local volume = SetDefaultNumber(File["Volume"], 1)
-  self:SetVolume(volume)
-  return self
+  return nil
 end
 
 --[[
@@ -83,7 +82,7 @@ proto Sound:Play()
 .D Play the current sound at its defined volume only if it is positive.
 ]]--
 function Sound:Play()
-  if self.volume > 0 then
+  if self.volume then
     self.source:setVolume(self.volume)
     self.source:play()
   end
@@ -131,7 +130,7 @@ proto Sound:Update(dt)
 Delta time.
 ]]--
 function Sound:Update(dt)
-  if self.source:isPlaying() == false then
+  if not self.source:isPlaying() then
     if self.nbloop < 0 then
       self:Play()
     elseif self.nbloop > 0 then

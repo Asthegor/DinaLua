@@ -33,7 +33,7 @@ proto const SoundManager.New()
 ]]--
 function SoundManager.New()
   local self = setmetatable({}, SoundManager)
-  self.GameEngine = require("L2DGE")
+  self.GameEngine = require("DinaGE")
   self.sounds = {}
   return self
 end
@@ -50,7 +50,7 @@ Type of the sound : 'static', 'stream' or 'queue'
 ]]--
 function SoundManager:AddSound(Name, File, Type)
   local sound = GameEngine.GetComponent("Sound", Name, File, Type)
-  if sound ~= nil then
+  if sound then
     self.sounds[Name] = sound
   end
 end
@@ -64,7 +64,7 @@ Name of the sound.
 ]]--
 function SoundManager:PauseSound(Name)
   local sound = self:SearchSoundByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:Pause()
   end
 end
@@ -82,7 +82,7 @@ Number of playing loops.
 function SoundManager:PlaySound(Name, NbLoop)
   if NbLoop == 0 then return false end
   local sound = self:SearchSoundByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:SetLooping(NbLoop - 1)
     return sound:Play()
   end
@@ -111,7 +111,7 @@ Number of loops to proceed.
 ]]--
 function SoundManager:SetLooping(Name, NbLoop)
   local sound = self:SearchSoundByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:SetLooping(NbLoop)
   end
 end
@@ -127,7 +127,7 @@ Volume to apply. Normal volume: 1.
 ]]--
 function SoundManager:SetVolume(Name, Volume)
   local sound = self:SearchSoundByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:SetVolume(Volume)
   end
 end
@@ -138,7 +138,7 @@ proto SoundManager:StopAll()
 .D This function stops all musics and sounds.
 ]]--
 function SoundManager:StopAll()
-  for name, sound in pairs(self.sounds) do
+  for _, sound in pairs(self.sounds) do
     sound:Stop()
   end
 end
@@ -151,7 +151,7 @@ Name of the sound.
 ]]--
 function SoundManager:StopSound(Name)
   local sound = self:SearchSoundByName(Name)
-  if sound ~= nil then
+  if sound then
     sound:Stop()
   end
 end
@@ -163,7 +163,7 @@ proto SoundManager:Update(dt)
 Delta time.
 ]]--
 function SoundManager:Update(dt)
-  for name, sound in pairs(self.sounds) do
+  for _, sound in pairs(self.sounds) do
     sound:Update(dt)
   end
 end
