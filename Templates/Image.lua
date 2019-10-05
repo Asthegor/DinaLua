@@ -1,5 +1,5 @@
 local Image = {
-  _VERSION     = 'Dina GE Image Template v1.0',
+  _VERSION     = 'Dina GE Image Template v1.1',
   _DESCRIPTION = 'Image Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/image/',
   _LICENSE     = [[
@@ -85,11 +85,20 @@ function Image.New(File, X, Y, ScaleX, ScaleY, Z)
 end
 
 --[[
-proto Image:Draw(SpriteBatch)
+proto Image:Draw()
 .D This function draws the image.
 ]]--
 function Image:Draw()
   love.graphics.draw(self.source, self.x, self.y, self.r, self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
+end
+
+--[[
+proto Image:GetDimensions()
+.D This function returns the width and height of the image.
+.R Returns the width and height of the image.
+]]--
+function Image:GetDimensions()
+  return self.width, self.height
 end
 
 --[[
@@ -117,6 +126,15 @@ proto Image:GetOrigin()
 ]]
 function Image:GetOrigin()
   return self.ox, self.oy
+end
+
+--[[
+proto Image:GetPosition()
+.D This function returns the position of the image.
+.R Returns the position on the X and Y axis of the image.
+]]
+function Image:GetPosition()
+  return self.x, self.y
 end
 
 --[[

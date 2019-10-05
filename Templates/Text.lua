@@ -101,6 +101,16 @@ function Text:Draw()
 end
 
 --[[
+proto Text:GetDimensions()
+.D This functions returns the width and height of the text, depending on the font used.
+.R Returns the width and height of the text.
+]]--
+function Text:GetDimensions()
+  return self:GetWidth(), self:GetHeight()
+end
+
+
+--[[
 proto Text:GetFont()
 .D This function returns the font defined for the text
 .R Font of the text
@@ -259,39 +269,40 @@ Delta time.
 ]]
 function Text:UpdateVisibility(dt)
   self.isVisible = false
-  if self.nbloop ~= 0 then
-    if self.waitTime <= 0 and self.displayTime < 0 then
+  if self.nbloop == 0 then
+    return
+  end
+  if self.waitTime <= 0 and self.displayTime < 0 then
+    self.isVisible = true
+    return
+  elseif self.waitTime <= 0 then
+    self.isVisible = true
+    self.timerDisplay = self.timerDisplay - dt
+    if self.timerDisplay < 0 then
+      self.isVisible = false
+      if self.nbloop > 0 then
+        self.nbloop = self.nbloop - 1
+      end --self.nbloop > 0
+      self.timerWait = self.waitTime
+      self.timerDisplay = self.displayTime
+    end --self.timerDisplay < 0
+  else --self.waitTime > 0
+    self.timerWait = self.timerWait - dt
+    if self.timerWait < 0 then
       self.isVisible = true
-      return
-    elseif self.waitTime <= 0 then
-      self.isVisible = true
-      self.timerDisplay = self.timerDisplay - dt
-      if self.timerDisplay < 0 then
-        self.isVisible = false
-        if self.nbloop > 0 then
-          self.nbloop = self.nbloop - 1
-        end --self.nbloop > 0
-        self.timerWait = self.waitTime
-        self.timerDisplay = self.displayTime
-      end --self.timerDisplay < 0
-    else --self.waitTime > 0
-      self.timerWait = self.timerWait - dt
-      if self.timerWait < 0 then
-        self.isVisible = true
-        if self.displayTime >= 0 then
-          self.timerDisplay = self.timerDisplay - dt
-          if self.timerDisplay < 0 then
-            self.isVisible = false
-            if self.nbloop > 0 then
-              self.nbloop = self.nbloop - 1
-            end --self.nbloop > 0
-            self.timerWait = self.waitTime
-            self.timerDisplay = self.displayTime
-          end --self.timerDisplay < 0
-        end --self.displayTime >= 0
-      end --self.timerWait < 0
-    end --self.waitTime <= 0 and self.displayTime < 0
-  end --self.nbloop
+      if self.displayTime >= 0 then
+        self.timerDisplay = self.timerDisplay - dt
+        if self.timerDisplay < 0 then
+          self.isVisible = false
+          if self.nbloop > 0 then
+            self.nbloop = self.nbloop - 1
+          end --self.nbloop > 0
+          self.timerWait = self.waitTime
+          self.timerDisplay = self.displayTime
+        end --self.timerDisplay < 0
+      end --self.displayTime >= 0
+    end --self.timerWait < 0
+  end --self.waitTime <= 0 and self.displayTime < 0
 end
 
 Text.__call = function() return Text.New() end
