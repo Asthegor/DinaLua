@@ -1,5 +1,5 @@
 local GameEngine = {
-  _VERSION     = 'Dina GE v1.0',
+  _VERSION     = 'Dina GE v1.1',
   _DESCRIPTION = 'Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/gameengine/',
   _LICENSE     = [[
@@ -60,44 +60,30 @@ end
 local Components = {}
 
 --[[
-proto GameEngine.GetComponent(ComponentName, Args...)
-.D This function creates a new component based on the given name with some arguments.
-.P ComponentName
+  proto GameEngine.AddComponent(ComponentName, Args...)  
+  .D This function creates a new component based on the given name with some arguments.
+.P ComponentName  
 Name of the component to create. Must not be nil.
 .P Args...
 Arguments to send to the component constructor. Can be none.
 .R Returns the component initialized with the arguments.
 ]]--
-function GameEngine.GetComponent(ComponentName, ...)
-  if not ComponentName then
+function GameEngine.AddComponent(ComponentName, ComponentType, ...)
+  if not ComponentType then
     return nil
   end
   if not GameEngineFiles then
     LoadGameEngineFiles()
   end
-  local RequirePath = GameEngineFiles[string.lower(ComponentName)]
+  local RequirePath = GameEngineFiles[string.lower(ComponentType)]
   if RequirePath then
     local Component = require(RequirePath)
     local newComponent = Component.New(...)
-    table.insert(Components, newComponent)
+    Components[ComponentName] = newComponent
     return newComponent
   end
+  print("Component '"..tostring(ComponentType).."' not found.")
   return nil
-end
-
---[[
-proto GameEngine.Update(dt)
-.D This function launch the Update function of all components created by GetComponent.
-.P dt
-Delta time.
-]]--
-function GameEngine.Update(dt)
-  for index = 1, #Components do
-    local component = Components[index]
-    if component.Update then
-      component:Update(dt)
-    end
-  end
 end
 
 --[[
@@ -105,10 +91,23 @@ proto GameEngine.Draw()
 .D This function launch the Draw function of all components created by GetComponent.
 ]]--
 function GameEngine.Draw()
-  for index = 1, #Components do
-    local component = Components[index]
+  for key, component in pairs(Components) do
     if component.Draw then
       component:Draw()
+    end
+  end
+end
+
+--[[
+proto GameEngine.Update(dt)  
+.D This function launch the Update function of all components created by GetComponent.
+.P dt  
+Delta time.
+]]--
+function GameEngine.Update(dt)
+  for key, component in pairs(Components) do
+    if component.Update then
+      component:Update(dt)
     end
   end
 end

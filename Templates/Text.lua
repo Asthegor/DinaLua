@@ -1,5 +1,5 @@
 local Text = {
-  _VERSION     = 'Dina GE Text Template v1.0',
+  _VERSION     = 'Dina GE Text Template v1.1',
   _DESCRIPTION = 'Text Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
@@ -58,7 +58,7 @@ Table containing all parameters which names are the same as the standard constru
 ]]--
 function Text.New(Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X, Y)
   local self = setmetatable({}, Text)
-  
+
   if type(Content) == "table" then
     self:SetContent(Content["Content"])
     self:SetFont(Content["FontName"], Content["FontSize"])
@@ -66,12 +66,25 @@ function Text.New(Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X,
     self:SetPosition(Content["X"], Content["Y"])
     return self
   end
-  
+
   self:SetContent(Content)
   self:SetFont(FontName, FontSize)
   self:SetTimers(WaitTime, DisplayTime, NbLoop)
   self:SetPosition(X, Y)
   return self
+end
+
+--[[
+proto Text:ChangePosition(X, Y)
+.D This function change the position on the X and Y axis of the text.
+.P X
+Add this value to the X axis position.
+.P Y
+Add this value to the Y axis position.
+]]--
+function Text:ChangePosition(X, Y)
+  self.posX = self.posX + X
+  self.posY = self.posY + Y
 end
 
 --[[
@@ -111,6 +124,15 @@ function Text:GetHeight()
   end
   local font = self:GetFont()
   return font:getHeight()
+end
+
+--[[
+proto Text:GetPosition()
+.D This function returns the current position of the text.
+.R Position on the X and Y axis of the text
+]]--
+function Text:GetPosition()
+  return self.posX, self.posY
 end
 
 --[[
@@ -237,7 +259,7 @@ Delta time.
 ]]
 function Text:UpdateVisibility(dt)
   self.isVisible = false
-  if self.nbloop then
+  if self.nbloop ~= 0 then
     if self.waitTime <= 0 and self.displayTime < 0 then
       self.isVisible = true
       return

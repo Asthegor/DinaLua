@@ -1,5 +1,5 @@
 local Sound = {
-  _VERSION     = 'Dina GE Sound Template v1.0',
+  _VERSION     = 'Dina GE Sound Template v1.1',
   _DESCRIPTION = 'Sound Template in Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/sound/',
   _LICENSE     = [[
@@ -25,7 +25,6 @@ local Sound = {
     SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
   ]]
 }
-Sound.__index = Sound
 
 -- REQUIRES
 
@@ -70,10 +69,20 @@ function Sound.New(File, Type, NbLoop, Volume)
 end
 
 --[[
+proto Sound:ChangeVolume(Volume)
+.D This function increase or decrease the volume of the sound.
+.P Volume
+Add this value to the current volume.
+]]--
+function Sound:ChangeVolume(Volume)
+  self.volume = self.volume + Volume
+end
+
+--[[
 proto Sound:Pause()
 .D Pause the current sound.
 ]]--
-function Sound:Play()
+function Sound:Pause()
   self.source:pause()
 end
 

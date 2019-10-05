@@ -1,5 +1,5 @@
 local SoundManager = {
-  _VERSION     = 'Dina GE Sound Manager v1.0',
+  _VERSION     = 'Dina GE Sound Manager v1.1',
   _DESCRIPTION = 'Sounds and Musics Manager in Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/soundmanager/',
   _LICENSE     = [[
@@ -49,47 +49,34 @@ Path of the file containing the sound.
 Type of the sound : 'static', 'stream' or 'queue'
 ]]--
 function SoundManager:AddSound(Name, File, Type)
-  local sound = GameEngine.GetComponent("Sound", Name, File, Type)
+  local sound = GameEngine.AddComponent(Name, "Sound", File, Type)
   if sound then
     self.sounds[Name] = sound
   end
 end
 
--- PAUSE
 --[[
-proto SoundManager:PauseSound(Name)
-.D This function look into the sound table for the given sound name and put it on pause if found.
-.P Name
-Name of the sound.
+proto SoundManager:ChangeVolume(Volume)
+.D This function increase or decrease the volume for all the sound.
+.P Volume
+Add this value to the current volume.
 ]]--
-function SoundManager:PauseSound(Name)
-  local sound = self:SearchSoundByName(Name)
-  if sound then
+function SoundManager:ChangeVolume(Volume)
+  for _, sound in pairs(self.sounds) do
+    sound:ChangeeVolume(Volume)
+  end
+end
+
+--[[
+proto SoundManager:PauseSound()
+.D This function pauses all sounds.
+]]--
+function SoundManager:PauseSounds()
+  for _, sound in pairs(self.sounds) do
     sound:Pause()
   end
 end
 
--- PLAY
---[[
-proto SoundManager:PlaySound(Name, NbLoop)
-.D This function sets the number of playing loops and plays a sound found by the given name.
-.P Name
-Name of the sound.
-.P NbLoop
-Number of playing loops.
-.R Return true if the sound is played; false otherwise.
-]]--
-function SoundManager:PlaySound(Name, NbLoop)
-  if NbLoop == 0 then return false end
-  local sound = self:SearchSoundByName(Name)
-  if sound then
-    sound:SetLooping(NbLoop - 1)
-    return sound:Play()
-  end
-  return false
-end
-
--- SEARCH
 --[[
 proto SoundManager:SearchSoundByName(Name)
 .D This function search into the sound table to find a sound with the given name.
@@ -102,32 +89,13 @@ function SoundManager:SearchSoundByName(Name)
 end
 
 --[[
-proto SoundManager:SetLooping(Name, NbLoop)
-.D This function sets the number of playing loops for the given sound name.
-.P Name
-Name of the sound.
-.P NbLoop
-Number of loops to proceed.
-]]--
-function SoundManager:SetLooping(Name, NbLoop)
-  local sound = self:SearchSoundByName(Name)
-  if sound then
-    sound:SetLooping(NbLoop)
-  end
-end
-
--- VOLUME
---[[
-proto SoundManager:SetVolume(Name, Volume)
-.D This function sets the volume for the music or sound identified by the given name.
-.P Name
-Name of the music or sound.
+proto SoundManager:SetVolume(Volume)
+.D This function sets a new volume value for all sounds.
 .P Volume
-Volume to apply. Normal volume: 1.
+New volume to apply to all sounds. Normal volume: 1.
 ]]--
-function SoundManager:SetVolume(Name, Volume)
-  local sound = self:SearchSoundByName(Name)
-  if sound then
+function SoundManager:SetVolume(Volume)
+  for _, sound in pairs(self.sounds) do
     sound:SetVolume(Volume)
   end
 end
@@ -139,19 +107,6 @@ proto SoundManager:StopAll()
 ]]--
 function SoundManager:StopAll()
   for _, sound in pairs(self.sounds) do
-    sound:Stop()
-  end
-end
--- STOP
---[[
-proto SoundManager:StopSound(Name)
-.D This function stops a sound identified by the given name.
-.P Name
-Name of the sound.
-]]--
-function SoundManager:StopSound(Name)
-  local sound = self:SearchSoundByName(Name)
-  if sound then
     sound:Stop()
   end
 end
@@ -168,7 +123,7 @@ function SoundManager:Update(dt)
   end
 end
 
-SoundManager.__index = SoundManager
 SoundManager.__call = function() return SoundManager.New() end
+SoundManager.__index = SoundManager
 SoundManager.__tostring = function() return "SoundManager" end
 return SoundManager
