@@ -1,28 +1,17 @@
 local Text = {
-  _VERSION     = 'Dina GE Text Template v1.1',
+  _VERSION     = 'Dina GE Text Template v1.2',
   _DESCRIPTION = 'Text Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
-    MIT LICENSE
+    ZLIB Licence
 
     Copyright (c) 2019 LACOMBE Dominique
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+        3. This notice may not be removed or altered from any source distribution.
   ]]
 }
 
@@ -56,14 +45,18 @@ proto const Text.New(ParamTable)
 Table containing all parameters which names are the same as the standard constructor. See the MinimalMenu example for further details.
 .R Return an instance of Text object.
 ]]--
-function Text.New(Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X, Y)
+function Text.New(Name, Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X, Y)
   local self = setmetatable({}, Text)
+  self.name = Name
+  self.GameEngine = require('DinaGE')
 
   if type(Content) == "table" then
     self:SetContent(Content["Content"])
     self:SetFont(Content["FontName"], Content["FontSize"])
     self:SetTimers(Content["WaitTime"], Content["DisplayTime"], Content["NbLoop"])
     self:SetPosition(Content["X"], Content["Y"])
+    self:SetZOrder()
+    self:SetColor()
     return self
   end
 
@@ -71,6 +64,7 @@ function Text.New(Content, FontName, FontSize, WaitTime, DisplayTime, NbLoop, X,
   self:SetFont(FontName, FontSize)
   self:SetTimers(WaitTime, DisplayTime, NbLoop)
   self:SetPosition(X, Y)
+  self:SetZOrder()
   return self
 end
 
@@ -83,8 +77,8 @@ Add this value to the X axis position.
 Add this value to the Y axis position.
 ]]--
 function Text:ChangePosition(X, Y)
-  self.posX = self.posX + X
-  self.posY = self.posY + Y
+  self.x = self.x + X
+  self.y = self.y + Y
 end
 
 --[[
@@ -93,12 +87,24 @@ proto Text:Draw()
 ]]--
 function Text:Draw()
   if self.isVisible == true then
+    love.graphics.setColor(self.color)
     local oldFont = love.graphics.getFont()
     if self.font then love.graphics.setFont(self.font) end
-    love.graphics.print(self.content, self.posX, self.posY)
+    love.graphics.print(self.content, self.x, self.y)
     if self.font then love.graphics.setFont(oldFont) end
+    love.graphics.setColor(Colors.WHITE)
   end
 end
+
+--[[
+proto Text:Getcolor()
+.D This functions returns the color of the text.
+.R Returns the color of the text.
+]]--
+function Text:GetColor()
+  return self.color
+end
+
 
 --[[
 proto Text:GetDimensions()
@@ -142,7 +148,7 @@ proto Text:GetPosition()
 .R Position on the X and Y axis of the text
 ]]--
 function Text:GetPosition()
-  return self.posX, self.posY
+  return self.x, self.y
 end
 
 --[[
@@ -159,12 +165,35 @@ function Text:GetWidth()
 end
 
 --[[
+proto Text:GetZOrder()
+.D This function returns the z-order of the text.
+.R Returns the z-order of the text.
+]]--
+function Text:GetZOrder()
+  return self.z
+end
+
+--[[
 proto Text:ResetTimers()
 .D This function sets the timers to -1 for the display time, 0 for the waiting time ans -1 for the number of loops. Those values display the text without any effect.
 ]]--
 function Text:ResetTimers()
   self:SetTimers(-1, 0, -1)
 end
+
+--[[
+proto Text:SetColor(Color)
+.D This function sets the color of the text.
+.P Color
+Color of the text. See file Functions/Enum_Colors for a list of some colors
+]]--
+function Text:SetColor(Color)
+  if not IsColorValid(Color) then
+    Color = Colors.WHITE
+  end
+  self.color = Color
+end
+
 
 --[[
 proto Text:SetContent(Content)
@@ -222,8 +251,8 @@ Y value. If not a number, set to 0.
 function Text:SetPosition(X, Y)
   X = SetDefaultNumber(X, 0) 
   Y = SetDefaultNumber(Y, 0)
-  self.posX = X
-  self.posY = Y
+  self.x = X
+  self.y = Y
 end
 
 --[[
@@ -249,6 +278,19 @@ function Text:SetTimers(WaitTime, DisplayTime, NbLoop)
   if DisplayTime ~= 0 and NbLoop ~= 0 then
     self.isVisible = true
   end
+end
+
+--[[
+proto Text:SetZOrder(Z)
+.D This function sets the z-order of the text.
+.P Z
+Z-order of the text (default: 1).
+]]--
+function Text:SetZOrder(Z)
+  if Z ~= self.z then
+    self.GameEngine.CallbackZOrder()
+  end
+  self.z = SetDefaultNumber(Z, 1)
 end
 
 --[[

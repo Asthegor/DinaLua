@@ -1,28 +1,17 @@
 local Image = {
-  _VERSION     = 'Dina GE Image Template v1.1',
+  _VERSION     = 'Dina GE Image Template v1.2',
   _DESCRIPTION = 'Image Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/image/',
   _LICENSE     = [[
-    MIT LICENSE
+    ZLIB Licence
 
     Copyright (c) 2019 LACOMBE Dominique
 
-    Permission is hereby granted, free of charge, to any person obtaining a
-    copy of this software and associated documentation files (the
-    "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish,
-    distribute, sublicense, and/or sell copies of the Software, and to
-    permit persons to whom the Software is furnished to do so, subject to
-    the following conditions:
-    The above copyright notice and this permission notice shall be included
-    in all copies or substantial portions of the Software.
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-    OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
-    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
-    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+        3. This notice may not be removed or altered from any source distribution.
   ]]
 }
 
@@ -52,8 +41,10 @@ proto const Image.New(ParamTable)
 Table containing all parameters which names are the same as the standard constructor. See the standard constructor for further details.
 .R Return an instance of Image object.
 ]]--
-function Image.New(File, X, Y, ScaleX, ScaleY, Z)
+function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
   local self = setmetatable({}, Image)
+  self.name = Name
+  self.GameEngine = require('DinaGE')
 
   if type(File) == "table" then
     if File["File"] then
@@ -82,6 +73,19 @@ function Image.New(File, X, Y, ScaleX, ScaleY, Z)
     return self
   end
   return nil
+end
+
+--[[
+proto Image:ChangePosition(X, Y)
+.D This function change the position on the X and Y axis of the image.
+.P X
+Add this value to the X axis position.
+.P Y
+Add this value to the Y axis position.
+]]--
+function Image:ChangePosition(X, Y)
+  self.x = self.x + X
+  self.y = self.y + Y
 end
 
 --[[
@@ -228,6 +232,9 @@ proto Image:SetZOrder(Z)
 Z-order of the image (default: 1).
 ]]--
 function Image:SetZOrder(Z)
+  if Z ~= self.z then
+    self.GameEngine.CallbackZOrder()
+  end
   self.z = SetDefaultNumber(Z, 1)
 end
 
