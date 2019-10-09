@@ -1,5 +1,5 @@
 local MenuManager = {
-  _VERSION     = 'Dina GE Menu Manager v1.2',
+  _VERSION     = 'Dina GE Menu Manager v1.3',
   _DESCRIPTION = 'Menu Manager in Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/menumanager/',
   _LICENSE     = [[

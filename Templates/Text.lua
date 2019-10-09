@@ -1,5 +1,5 @@
 local Text = {
-  _VERSION     = 'Dina GE Text Template v1.2',
+  _VERSION     = 'Dina GE Text Template v1.3',
   _DESCRIPTION = 'Text Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[

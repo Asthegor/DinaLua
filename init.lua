@@ -1,5 +1,5 @@
 local GameEngine = {
-  _VERSION     = 'Dina GE v1.2',
+  _VERSION     = 'Dina GE v1.3',
   _DESCRIPTION = 'Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/gameengine/',
   _LICENSE     = [[
@@ -88,12 +88,11 @@ end
 
 --[[
 proto GameEngine.CallbackZOrder()
-.D This functions is used to ensure that all components are drawn in the right order.
+.D This functions is used to ensure that all components are drawn in the right order by calling the function CallbackZOrder of its child elements.
 ]]--
 function GameEngine.CallbackZOrder()
   for key, component in pairs(Components) do
     if component.CallbackZOrder then
-      print("CallbackZOrder for "..tostring(component))
       component:CallbackZOrder()
     end
   end

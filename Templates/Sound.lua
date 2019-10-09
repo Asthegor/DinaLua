@@ -1,5 +1,5 @@
 local Sound = {
-  _VERSION     = 'Dina GE Sound Template v1.2',
+  _VERSION     = 'Dina GE Sound Template v1.3',
   _DESCRIPTION = 'Sound Template in Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/sound/',
   _LICENSE     = [[

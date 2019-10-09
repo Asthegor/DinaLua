@@ -1,5 +1,5 @@
 local Image = {
-  _VERSION     = 'Dina GE Image Template v1.2',
+  _VERSION     = 'Dina GE Image Template v1.3',
   _DESCRIPTION = 'Image Template in Dina GE',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/image/',
   _LICENSE     = [[

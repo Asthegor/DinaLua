@@ -1,5 +1,5 @@
 local SoundManager = {
-  _VERSION     = 'Dina GE Sound Manager v1.2',
+  _VERSION     = 'Dina GE Sound Manager v1.3',
   _DESCRIPTION = 'Sounds and Musics Manager in Dina Game Engine',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/soundmanager/',
   _LICENSE     = [[
