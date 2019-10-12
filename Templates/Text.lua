@@ -65,6 +65,7 @@ function Text.New(Name, Content, FontName, FontSize, WaitTime, DisplayTime, NbLo
   self:SetTimers(WaitTime, DisplayTime, NbLoop)
   self:SetPosition(X, Y)
   self:SetZOrder()
+  self:SetColor()
   return self
 end
 
@@ -83,14 +84,18 @@ end
 
 --[[
 proto Text:Draw()
-.D This function draw the text with the defined font.
+.D This function draw the text with the defined font.The text can be align within the given limit.
+.P Limit
+Limit in pixels that the text can not exceed.
+.P Alignment
+Alignment of the text.
 ]]--
-function Text:Draw()
+function Text:Draw(Limit, Alignment)
   if self.isVisible == true then
     love.graphics.setColor(self.color)
     local oldFont = love.graphics.getFont()
     if self.font then love.graphics.setFont(self.font) end
-    love.graphics.print(self.content, self.x, self.y)
+    love.graphics.printf(self.content, self.x, self.y, Limit or self:GetWidth(), self.alignment)
     if self.font then love.graphics.setFont(oldFont) end
     love.graphics.setColor(Colors.WHITE)
   end
@@ -179,6 +184,16 @@ proto Text:ResetTimers()
 ]]--
 function Text:ResetTimers()
   self:SetTimers(-1, 0, -1)
+end
+
+--[[
+proto Text:SetAlignment(Alignment)
+.D This function sets the alignment of the text.
+.P Alignment
+Alignment of the text. (default: "left")
+]]--
+function Text:SetAlignment(Alignment)
+  self.alignment = Alignment
 end
 
 --[[

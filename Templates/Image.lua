@@ -90,9 +90,29 @@ end
 
 --[[
 proto Image:Draw()
-.D This function draws the image.
+.D This function draws the image within the Limit. If the size exceed the given limit, the scale is automatically adjusted to fit within the limit The new scale do not deform the image.
+.P Limit
+Limit in pixels that the image can not exceed.
 ]]--
-function Image:Draw()
+function Image:Draw(Limit)
+  if Limit and self.limit ~= Limit then
+    self.limit = Limit
+    local ratioX = 1
+    local wx = self.x + (self.width * self.sx) - self.ox
+    if wx > Limit then
+      local maxW = Limit - self.x
+      ratioX = maxW / self.width
+    end
+    local ratioY = 1
+    local wy = self.y + (self.height * self.sy) - self.oy
+    if wy > Limit then
+      local maxW = Limit - self.y
+      ratioY = maxW / self.height
+    end
+    local ratio = math.max(ratioX, ratioY)
+    self.sx = math.abs(ratio)
+    self.sy = math.abs(ratio)
+  end
   love.graphics.draw(self.source, self.x, self.y, self.r, self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
 end
 
@@ -167,6 +187,21 @@ Direction to display the image. 1 for standard and -1 for reverse.
 ]]--
 function Image:SetFlip(Flip)
   self.flip = SetDefaultNumber(Flip, 1)
+end
+
+--[[
+proto Image:SetNewImage(File)
+.D This function change the current image by the given one.
+.P File
+Path and name of the new image.
+]]--
+function Image:SetNewImage(File)
+  if File then
+    self.source = love.graphics.newImage(File)
+    self.height = self.source:getHeight()
+    self.width = self.source:getWidth()
+    self.limit = nil
+  end
 end
 
 --[[
