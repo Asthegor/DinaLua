@@ -47,6 +47,12 @@ end
 
 -- The Components table contains all loaded components.
 local Components = {}
+local IndexComponents = {}
+
+GameEngine.ScreenWidth = love.graphics.getWidth()
+GameEngine.ScreenHeight = love.graphics.getHeight()
+
+
 --[[
   proto GameEngine.AddComponent(ComponentName, Args...)  
   .D This function creates a new component based on the given name with some arguments.
@@ -110,6 +116,7 @@ function GameEngine.Update(dt)
       component:Update(dt)
     end
   end
+  
 end
 
 return GameEngine

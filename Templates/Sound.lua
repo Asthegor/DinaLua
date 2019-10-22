@@ -69,6 +69,15 @@ function Sound:ChangeVolume(Volume)
 end
 
 --[[
+proto Sound:GetName()
+.D This function returns the name of the sound.
+.R Returns the name of the sound.
+]]
+function Sound:GetName()
+  return self.name
+end
+
+--[[
 proto Sound:Pause()
 .D Pause the current sound.
 ]]--
@@ -99,6 +108,26 @@ function Sound:SetLooping(NbLoop)
     self.nbloop = NbLoop
   else
     self.nbloop = 0
+  end
+end
+
+--[[
+proto Sound:SetNewSound(File)
+.D This function sets a new sound. If the current sound is playing, stop it and then change the sound.
+.P File
+Path and name of the sound file
+.P Type
+Type of sound; could only be 'stream', 'static' or 'queue' (Löve2D requirements).
+]]--
+function Sound:SetNewSound(File, Type)
+  if File then
+    self:Stop()
+    if not Type or Type == "" then
+      Type = "stream"
+    end
+    self.source = love.audio.newSource(File, Type)
+    self:SetLooping(-1)
+    self:SetVolume(1)
   end
 end
 

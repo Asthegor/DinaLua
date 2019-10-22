@@ -22,9 +22,6 @@ proto SortTableByZOrder(Table)
 .P Table
 Table to sort by the Z-Order.
 ]]--
-local nb = 0
 function SortTableByZOrder(Table)
-  nb = nb + 1
-  print("SortTableByZOrder activated "..nb.. " times")
-  table.sort(Table, function(a,b) return (a.GetZOrder and a:GetZOrder() or 0) < (b.GetZOrder and b:GetZOrder() or 0) end)
+  table.sort(Table, function(a,b) return ((a.GetZOrder and a:GetZOrder()) or 0) < ((b.GetZOrder and b:GetZOrder()) or 0) end)
 end

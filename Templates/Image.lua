@@ -48,6 +48,7 @@ function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
 
   if type(File) == "table" then
     if File["File"] then
+      self.filename = File["File"]
       self.source = love.graphics.newImage(File["File"])
       self.height = self.source:getHeight()
       self.width = self.source:getWidth()
@@ -62,6 +63,7 @@ function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
   end
 
   if File then
+    self.filename = File
     self.source = love.graphics.newImage(File)
     self.height = self.source:getHeight()
     self.width = self.source:getWidth()
@@ -94,25 +96,7 @@ proto Image:Draw()
 .P Limit
 Limit in pixels that the image can not exceed.
 ]]--
-function Image:Draw(Limit)
-  if Limit and self.limit ~= Limit then
-    self.limit = Limit
-    local ratioX = 1
-    local wx = self.x + (self.width * self.sx) - self.ox
-    if wx > Limit then
-      local maxW = Limit - self.x
-      ratioX = maxW / self.width
-    end
-    local ratioY = 1
-    local wy = self.y + (self.height * self.sy) - self.oy
-    if wy > Limit then
-      local maxW = Limit - self.y
-      ratioY = maxW / self.height
-    end
-    local ratio = math.max(ratioX, ratioY)
-    self.sx = math.abs(ratio)
-    self.sy = math.abs(ratio)
-  end
+function Image:Draw()
   love.graphics.draw(self.source, self.x, self.y, self.r, self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
 end
 
@@ -151,6 +135,16 @@ proto Image:GetOrigin()
 function Image:GetOrigin()
   return self.ox, self.oy
 end
+
+--[[
+proto Image:GetName()
+.D This function returns the name of the image.
+.R Returns the name of the image.
+]]
+function Image:GetName()
+  return self.name
+end
+
 
 --[[
 proto Image:GetPosition()
@@ -196,7 +190,8 @@ proto Image:SetNewImage(File)
 Path and name of the new image.
 ]]--
 function Image:SetNewImage(File)
-  if File then
+  if File and File ~= self.filename then
+    self.filename = File
     self.source = love.graphics.newImage(File)
     self.height = self.source:getHeight()
     self.width = self.source:getWidth()
@@ -261,16 +256,33 @@ function Image:SetScale(ScaleX, ScaleY)
 end
 
 --[[
+proto Image:SetScaleFromLimit(LimitX, LimitY)
+.D This function define the scales of the image from the given limits.
+.P LimitX
+Limit on the X axis not to exceed.
+.P ScaleY
+Limit on the Y axis not to exceed. If not defined, use the limit on the X axis instead.
+]]--
+function Image:SetScaleFromLimit(LimitX, LimitY)
+  local scaleX = LimitX / self:GetWidth()
+  if not LimitY then LimitY = LimitX end
+  local scaleY = LimitY / self:GetHeight()
+  local scale = math.max(scaleX, scaleY)
+  self:SetScale(scale, scale)
+end
+
+--[[
 proto Image:SetZOrder(Z)
 .D This function sets the z-order of the image.
 .P Z
 Z-order of the image (default: 1).
 ]]--
 function Image:SetZOrder(Z)
-  if Z ~= self.z then
+  local zorder = self.z
+  self.z = SetDefaultNumber(Z, 1)
+  if Z ~= zorder then
     self.GameEngine.CallbackZOrder()
   end
-  self.z = SetDefaultNumber(Z, 1)
 end
 
 

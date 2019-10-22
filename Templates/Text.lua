@@ -148,6 +148,15 @@ function Text:GetHeight()
 end
 
 --[[
+proto Text:GetName()
+.D This function returns the name of the text.
+.R Returns the name of the text.
+]]
+function Text:GetName()
+  return self.name
+end
+
+--[[
 proto Text:GetPosition()
 .D This function returns the current position of the text.
 .R Position on the X and Y axis of the text
@@ -302,10 +311,11 @@ proto Text:SetZOrder(Z)
 Z-order of the text (default: 1).
 ]]--
 function Text:SetZOrder(Z)
-  if Z ~= self.z then
+  local zorder = self.z
+  self.z = SetDefaultNumber(Z, 1)
+  if Z ~= zorder then
     self.GameEngine.CallbackZOrder()
   end
-  self.z = SetDefaultNumber(Z, 1)
 end
 
 --[[
