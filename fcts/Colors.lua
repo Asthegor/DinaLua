@@ -1,7 +1,6 @@
-local Enum_Colors = {
+Colors = {
   _VERSION     = 'Dina GE Colors v1.1',
-  _DESCRIPTION = 'Colors in Dina Game Engine',
-  _URL         = 'https://dina.lacombedominique.com/documentation/functions/enum_colors/',
+  _DESCRIPTION = 'Enumeration of colors, some are used in Dina Game Engine',
   _LICENSE     = [[
     ZLIB Licence
 
@@ -14,7 +13,7 @@ local Enum_Colors = {
         3. This notice may not be removed or altered from any source distribution.
   ]]
 }
-Colors = {}
+
 Colors["INDIANRED"]             = { 205/255, 92/255, 92/255 }
 Colors["LIGHTCORAL"]            = { 240/255, 128/255, 128/255 }
 Colors["SALMON"]                = { 250/255, 128/255, 114/255 }
@@ -157,24 +156,30 @@ Colors["LIGHTSLATEGRAY"]        = { 119/255, 136/255, 153/255 }
 Colors["SLATEGRAY"]             = { 112/255, 128/255, 144/255 }
 Colors["DARKSLATEGRAY"]         = { 47/255, 79/255, 79/255 }
 Colors["BLACK"]                 = { 0/255, 0/255, 0/255 }
-
+Colors["TRANSPARENT"]           = { 0/255, 0/255, 0/255, 0}
+local CurrentFile = (...):gsub("^(.*/+)", "")
+local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 
 --[[
 proto IsColorValid(Color)
 .D This function try to determine if the given color is a valid color for Love2D.
 .P Color
 Color to control.
-]]
-function IsColorValid(Color)
-  if type(Color) ~= "table" then
+]]--
+function IsColorValid(pColor)
+  if type(pColor) ~= "table" or 
+     #pColor < 3 or
+     #pColor > 4 then
     return false
   end
-  local r = Color[1]
-  local g = Color[2]
-  local b = Color[3]
+  
+  local resultColor = IsInLimits(pColor[1],0,1) and -- R
+                      IsInLimits(pColor[2],0,1) and -- G
+                      IsInLimits(pColor[3],0,1)     -- B
 
-  if r and g and b then
-    return r<=1 and r>=0 and g<=1 and g>=0 and b<=1 and b>=0
+  if #pColor == 4 and resultColor then
+    resultColor = resultColor and
+                      IsInLimits(pColor[4],0,1)     -- A
   end
-  return false
+  return resultColor
 end

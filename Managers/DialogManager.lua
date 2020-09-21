@@ -1,3 +1,40 @@
+--[[
+proto Liste des entrées possibles dans un fichier de dialogue.
+.D Chaque entrée doit obligatoirement être suivie du signe = sans aucun espace avant.\nLes entrées minimales pour un dialogue sont les suivantes (dans l'ordre) :\nDEFAULTFONT, START, NAME, TITLE*, TEXT*, STOP\nLes entrées signalées par une * peuvent être répétées.\n\nLa liste ci-dessous vous énumère toutes les entrées prises en compte dans la version courante.
+.P DEFAULTFONT (obligatoire)
+Police de caractère par défaut à utiliser pour tous les dialogues.
+.P DEFAULTMUSIC
+Musique par défaut à jouer pour tous les dialogues.
+.P DEFAULTPOSITION
+Position d'affichage à utiliser pour tous les dialogues.
+.P START (obligatoire)
+Indique le début d'un dialogue.
+.P NAME (obligatoire)
+Nom du dialogue pour pouvoir l'identifier lors de son appel.
+.P DIALOGFONT
+Police de caractère par défaut du dialogue courant.
+.P DIALOGMUSIC
+Musique par défaut du dialogue courant.
+.P DIALOGPOSITION
+Position par défaut du dialogue courant.
+.P DIALOGCONTINUE
+Texte à afficher pour indiquer comment continuer le dialogue.
+.P DIALOGSKIP
+Texte à afficher pour le bouton qui permet de passer le dialogue.
+.P TITLE (obligatoire)
+Titre de la conversation courante.
+.P TEXT
+Texte de la conversation courante.
+.P IMAGE
+Image de la conversation courante. Si des coordonnées sont ajoutées après le chemin de l'image, celle-ci s'affichera aux coordonnées renseignées.
+.P FONT
+Police de caractère de la conversation courante.
+.P MUSIC
+Musique de la conversation courante.
+.P POSITION
+Position de la conversation courante.
+]]--
+
 local DialogManager = {
   _VERSION     = 'Dina GE Dialog Manager v1.3',
   _DESCRIPTION = 'Dialog Manager in Dina Game Engine',
@@ -16,65 +53,65 @@ local DialogManager = {
 }
 
 --[[
-proto const DialogManager.New(Name, ActionKey, Limit, Border)
+proto const DialogManager.New(ActionKey, Width, Border)
 .D This function creates a new DialogManager object.
-.P Name
-Name of the component in Dina Game Engine.
 .P ActionKey
 Key used to speed up the current text or to go to the next dialog.
-.P Limit
-Limit in pixels that all components must not exceed.
-.P Border
-Size in pixels for the border.
+.P Width
+Width in pixels that all components must not exceed.
+.P Margin
+Size in pixels for the margin of the text.
+.P Padding
+Size in pixels for the padding of the text.
 .R Return an instance of DialogManager object.
 ]]--
-function DialogManager.New(Name, ActionKey, Limit, Border)
+function DialogManager.New(ActionKey, Width, Height, Margin, Padding)
   local self = setmetatable({}, DialogManager)
-  self.name = Name
-  self.IndexComponents = {}
   self.GameEngine = require('DinaGE')
-  self.canvas = love.graphics.newCanvas(GameEngine.ScreenWidth, GameEngine.ScreenHeight)
-  if ActionKey and Limit then
-    self:SetActionKey(ActionKey)
-    self.limit = Limit
-    self.border = SetDefaultNumber(Border, 0)
-    self.thread = love.thread.newThread("DinaGE/Threads/PlayDialogs.lua")
-    self.channel = {}
-    self.channel.text = love.thread.getChannel('NewText')
-    self.channel.speed = love.thread.getChannel('Speed')
-    self.start = false
-    self.currentdialog = nil
-    self.numDialog = 0
-    self.currenttext = ""
-    self.Components = {}
-    self.keypressed = false
-    return self
-  end
-  return nil
+  self:SetActionKey(ActionKey)
+  self.width = Width or love.graphics.getWidth()
+  self.height = Height or love.graphics.getHeight()
+  self.margin = SetDefaultNumber(Margin, 0)
+  self.padding = SetDefaultNumber(Padding, 0)
+  self.canvas = love.graphics.newCanvas(self.width, self.height)
+  self.thread = love.thread.newThread("DinaGE/Threads/PlayDialogs.lua")
+  self.channel = {}
+  self.channel.text = love.thread.getChannel('NewText')
+  self.channel.speed = love.thread.getChannel('Speed')
+  self.channel.stop = love.thread.getChannel('Stop')
+  self.start = false
+  self.currentdialog = nil
+  self.numDialog = 0
+  self.currentdialogtext = ""
+  self.components = {}
+  self.keypressed = false
+  self.dialogfinished = false
+  self.backcolor = nil
+  return self
 end
 
 --[[
-proto DialogManager:AddComponent(ComponentName, ComponentType, ...)
+proto DialogManager:AddComponent(ComponentType, Args...)
 .D This function add a new component defined by its given name and type. Can not be as the same type of the manager.
-.P ComponentName
-Name of the component to add.
 .P ComponentType
 Type of the component to add.
-.P ...
+.P Args...
 Other arguments needed to create the component.
 .R Returns a new instance of the component.
 ]]--
-function DialogManager:AddComponent(ComponentName, ComponentType, ...)
+function DialogManager:AddComponent(ComponentType, ...)
   if ComponentType == type(self) then
     return nil
   end
-  if not self.Components then
-    self.Components = {}
+  if not self.components then
+    self.components = {}
   end
-  local component = self.GameEngine.AddComponent(ComponentName, ComponentType, ...)
-  table.insert(self.Components, component)
+  local component = self.GameEngine:CreateComponent(ComponentType, ...)
+  table.insert(self.components, component)
   return component
 end
+
+
 
 --[[
 proto DialogManager:AddDialogs(File, Name)
@@ -85,7 +122,7 @@ Path and name of a dialog file. Must be with a Lua extension.
 Name used to store the dialog or group of dialog.
 ]]--
 function DialogManager:AddDialogs(File, Name)
-  local newDialog = require(File)
+  local newDialog = self:UnpackDialogFile(File)
   if not self.dialogues then
     self.dialogues = {}
   end
@@ -103,32 +140,64 @@ proto MenuManager.CallbackZOrder()
 .D This functions is used to ensure that all components are drawn in the right order.
 ]]--
 function DialogManager:CallbackZOrder()
-  SortTableByZOrder(self.Components)
+  SortTableByZOrder(self.components)
 end
 
 --[[
 proto DialogManager:Draw()
-.D This function draw the dialog at the right place with the dev's options and applyed the limit and border.
-]]
+.D This function draw the dialog at the right place with the dev's options and applyed the width and border.
+]]--
 function DialogManager:Draw()
   if self.currentdialog and self.currentdialog.start then
-    for key, component in pairs(self.Components) do
+    local currentwidth = self.currentdialog.width or self.width
+    love.graphics.setColor(1,1,1,1)
+    for key, component in pairs(self.components) do
       if component.Draw then
-        component:Draw(self.limit - self.border*2)
+        component:Draw()
       end
     end
+    love.graphics.setColor(1,1,1,1)
   end
 end
 
 --[[
-proto DialogManager:GetName()
-.D This function returns the name of the dialog manager.
-.R returns the name of the dialog manager.
+proto DialogManager:GetDialog()
+.D This function retreives the current dialog.
+.R Current dialog.
 ]]--
-function DialogManager:GetName()
-  return self.name
+function DialogManager:GetDialog()
+  if self.dialogfinished == false then
+    return self.currentdialog[self.numDialog]
+  end
 end
 
+--[[
+proto DialogManager:IsActionKeyPressed()
+.D This function indicates if the action key is pressed. The value "mb1" and "mb2" are used for the mouse button left and right.
+.R True if the action key or mouse button is pressed; false otherwise.
+]]--
+function DialogManager:IsActionKeyPressed()
+  if string.sub(self.key, 1, 2) == "mb" then
+    local numbtn = string.sub(self.key, -1)
+    return love.mouse.isDown(tonumber(numbtn))
+  end
+--  if self.key == "mb1" then
+--    return love.mouse.isDown(1)
+--  end
+--  if self.key == "mb2" then
+--    return love.mouse.isDown(2)
+--  end
+  return love.keyboard.isDown(self.key)
+end
+
+--[[
+proto DialogManager:IsDialogFinished()
+.D This function indicates if the dialog is finished or not.
+.R True if the dialog is finished; false otherwise.
+]]--
+function DialogManager:IsDialogFinished()
+  return self.dialogfinished
+end
 
 --[[
 proto DialogManager:Play(Name)
@@ -145,14 +214,16 @@ function DialogManager:Play(Name)
       self.numDialog = 1
       -- Ajout des composants à afficher
       if self.currentdialog.image then
-        self.backgroundImageComponent = self:AddComponent("BackgroundImage", "Image", self.currentdialog.image)
+        self.backgroundImageComponent = self:AddComponent("Panel")
+        local img = love.graphics.newImage(self.currentdialog.image.name)
+        self.backgroundImageComponent:SetImage(img)
         self.backgroundImageComponent:SetZOrder(-10)
-        self.backgroundImageComponent:SetScaleFromLimit(self.GameEngine.ScreenWidth, self.GameEngine.ScreenHeight)
       end
       if self.currentdialog.sound then
-        self.backgroundSoundComponent = self:AddComponent("BackgroundSound", "Sound", self.currentdialog.sound.file, self.currentdialog.sound.type)
+        self.backgroundSoundComponent = self:AddComponent("Sound", self.currentdialog.sound.file, self.currentdialog.sound.type)
         self.backgroundSoundComponent:Play()
       end
+      self.currentdialogtext = self.currentdialog[self.numDialog].text
       self:SetComponents(self.currentdialog[self.numDialog])
 
       self.dialogues[Name].start = true
@@ -166,14 +237,15 @@ proto DialogManager:ResetComponents()
 .D This function remove all components.
 ]]--
 function DialogManager:ResetComponents()
-  for i=#self.Components, 1, -1 do
-    table.remove(self.Components, i)
+  for i=#self.components, 1, -1 do
+    table.remove(self.components, i)
   end
   self.backgroundImageComponent = nil
   self.backgroundSoundComponent = nil
   self.imageComponent = nil
   self.titleComponent = nil
   self.textComponent = nil
+  self.continueComponent = nil
 end
 
 --[[
@@ -183,33 +255,37 @@ proto DialogManager:RestartComponents()
 function DialogManager:RestartComponents()
   local Dialog = self.currentdialog[self.numDialog]
   -- Background image
-  if self.backgroundImageComponent then
-    self.backgroundImageComponent:SetNewImage(self.currentdialog.image)
-    self.backgroundImageComponent:SetScaleFromLimit(self.GameEngine.ScreenWidth, self.GameEngine.ScreenHeight)
-  elseif self.currentdialog.image then
-    self.backgroundImageComponent = self:AddComponent("BackgroundImage", "Image", self.currentdialog.image)
+  if self.backgroundImageComponent ~= nil then
+    local img
+    if self.currentdialog.image ~= nil and self.currentdialog.image.name ~= "" then
+      img = love.graphics.newImage(self.currentdialog.image.name)
+    end
+    self.backgroundImageComponent:SetImage(img)
     self.backgroundImageComponent:SetZOrder(-10)
-    self.backgroundImageComponent:SetScaleFromLimit(self.GameEngine.ScreenWidth, self.GameEngine.ScreenHeight)
   end
   -- Background sound
   if self.backgroundSoundComponent then
-    self.backgroundSoundComponent:SetNewSound(self.currentdialog.sound.file, self.currentdialog.sound.type)
-    self.backgroundSoundComponent:Play()
+    if not self.backgroundSoundComponent:IsSameSound(self.currentdialog.sound.file, 
+      self.currentdialog.sound.type) then
+      self.backgroundSoundComponent:SetNewSound(self.currentdialog.sound.file, 
+        self.currentdialog.sound.type)
+    else
+      if not self.backgroundSoundComponent:IsPlaying() then
+        self.backgroundSoundComponent:Play()
+      end
+    end
   elseif self.currentdialog.sound then
-    self.backgroundSoundComponent = self:AddComponent("BackgroundSound", "Sound", self.currentdialog.sound.file, self.currentdialog.sound.type)
-    self.backgroundSoundComponent:Play()
+    self.backgroundSoundComponent = self:AddComponent("Sound", self.currentdialog.sound.file, self.currentdialog.sound.type)
+    if not self.backgroundSoundComponent:IsPlaying() then
+      self.backgroundSoundComponent:Play()
+    end
   end
   -- Front image
-  if self.imageComponent then
-    if Dialog.image then
-      self.imageComponent:SetNewImage(Dialog.image)
-    else
-      self:RemoveComponent(self.imageComponent)
-      self.imageComponent = nil
-    end
-  elseif Dialog.image then
-    self.imageComponent = self:AddComponent("Image", "Image", Dialog.image)
+  local img
+  if Dialog.image ~= nil and Dialog.image.name ~= "" then
+    img = love.graphics.newImage(Dialog.image.name)
   end
+  self.imageComponent:SetImage(img)
   -- Title
   if self.titleComponent then
     if Dialog.title then
@@ -219,22 +295,35 @@ function DialogManager:RestartComponents()
         self.titleComponent:SetFont(Dialog.title.font.name,Dialog.title.font.size)
       end
       if Dialog.title.align then
-        self.titleComponent:SetAlignment(Dialog.title.align)
+        self.titleComponent:SetAlignments(Dialog.title.align)
       end
     else
-      self:RemoveComponent(self.titleComponent)
       self.titleComponent = nil
     end
   elseif Dialog.title.text then
-    self.titleComponent = self:AddComponent("Title","Text",Dialog.title.text,Dialog.title.font.name,Dialog.title.font.size)
-    self.titleComponent:SetAlignment(Dialog.title.align)
+    self.titleComponent = self:AddComponent("Text", Dialog.title.text)
+    self.titleComponent:SetDimensions(self.width-self.border, self.height-self.border)
+    self.titleComponent:SetFont(Dialog.title.font.name, Dialog.title.font.size)
+    self.titleComponent:SetAlignments(Dialog.title.align)
   end
   -- Text
   if self.textComponent then
     self.textComponent:SetContent("")
     self.textComponent:SetFont(Dialog.font.name,Dialog.font.size)
   elseif Dialog.text then
-    self.textComponent = self:AddComponent("Text","Text","",Dialog.font.name,Dialog.font.size)
+    self.textComponent = self:AddComponent("Text","")
+    self.textComponent:SetDimensions(self.width-self.border, self.height-self.border)
+    self.textComponent:SetFont(Dialog.font.name,Dialog.font.size)
+  end
+  if self.continueComponent then
+    self.continueComponent:SetVisible(false)
+  else
+    self.continueComponent = self:AddComponent("Text", Dialog.continue)
+    self.continueComponent:SetTimers(0.8,0.8,-1)
+    self.continueComponent:SetFont(Dialog.font.name, Dialog.font.size)
+    self.continueComponent:SetDimensions(self.width-self.border*2, self.continueComponent:GetTextHeight())
+    self.continueComponent:SetAligments("right")
+    self.continueComponent:SetVisible(false)
   end
 
   if self.soundComponent then
@@ -243,11 +332,10 @@ function DialogManager:RestartComponents()
       self.soundComponent:SetNewSound(Dialog.sound.file)
       self.soundComponent:Play()
     else
-      self:RemoveComponent(self.soundComponent)
       self.soundComponent = nil
     end
   elseif Dialog.sound then
-    self.soundComponent = self:AddComponent("Sound", "Sound", Dialog.sound.file, Dialog.sound.type)
+    self.soundComponent = self:AddComponent("Sound", Dialog.sound.file, Dialog.sound.type)
     self.soundComponent:Play()
   end
 
@@ -275,24 +363,61 @@ function DialogManager:SetActionKey(Key)
   self.key = Key
 end
 
+function DialogManager:SetBackColor(Color)
+  self.backcolor = Color
+end
+function DialogManager:SetBackColorComponents(Color)
+  if self.titleComponent then
+    self.titleComponent:SetBackColor(Color)
+  end
+  if self.textComponent then
+    self.textComponent:SetBackColor(Color)
+  end
+  if self.continueComponent then
+    self.continueComponent:SetBackColor(Color)
+  end
+end
 --[[
 proto DialogManager:SetComponents(Dialog)
 .D This function creates all components needed to the dialog and start the thread.
 ]]--
 function DialogManager:SetComponents(Dialog)
   if Dialog.sound then
-    self.soundComponent = self:AddComponent("Sound", "Sound", Dialog.sound.file, Dialog.sound.type)
+    self.soundComponent = self:AddComponent("Sound", Dialog.sound.file, Dialog.sound.type)
     self.soundComponent:Play()
   end
-  if Dialog.image then
-    self.imageComponent = self:AddComponent("Image", "Image", Dialog.image)
+  if self.imageComponent == nil then
+    self.imageComponent = self:AddComponent("Panel")
+  end
+  if Dialog.image ~= nil and Dialog.image.name ~= "" then
+    local img = love.graphics.newImage(Dialog.image.name)
+    self.imageComponent:SetImage(img)
+  else
+    self.imageComponent:SetImage()
   end
   if Dialog.title then
-    self.titleComponent = self:AddComponent("Title","Text",Dialog.title.text,Dialog.title.font.name,Dialog.title.font.size)
-    self.titleComponent:SetAlignment(Dialog.title.align)
+    local font = Dialog.title.font or Dialog.font
+    self.titleComponent = self:AddComponent("Text",Dialog.title.text)
+    self.titleComponent:SetDimensions(self.width-self.border*2, self.height-self.border*2)
+    self.titleComponent:SetFont(font.name, font.size)
+    self.titleComponent:SetAlignments(Dialog.title.align)
   end
-  self.textComponent = self:AddComponent("Text","Text",{FontName=Dialog.font.name,FontSize=Dialog.font.size,Content=""})
+  self.textComponent = self:AddComponent("Text", "")
+  self.textComponent:SetDimensions(self.width-self.border*2, self.height-self.border*2)
+  self.textComponent:SetFont(Dialog.font.name, Dialog.font.size)
+
+  self.continueComponent = self:AddComponent("Text", Dialog.continue)
+  self.continueComponent:SetTimers(0.8,0.8,-1)
+  self.continueComponent:SetFont(Dialog.font.name, Dialog.font.size)
+  self.continueComponent:SetDimensions(self.width-self.border*2, self.continueComponent:GetTextHeight())
+  self.continueComponent:SetAlignments("right")
+  self.continueComponent:SetVisible(false)
+
   self:SetDialogPosition(Dialog)
+
+  if self.backcolor then
+    self:SetBackColorComponents(self.backcolor)
+  end
   self.thread:start(Dialog.text)
 end
 
@@ -302,49 +427,294 @@ proto DialogManager:SetDialogPosition(Dialog)
 .P Dialog
 Table containing all datas of the current dialog.
 ]]--
+local SCREEN_HEIGHT = love.graphics.getHeight()
 function DialogManager:SetDialogPosition(Dialog)
   if Dialog.position then
     -- calcul de toutes les positions des composants
     local x = Dialog.position.x + self.border
     local y = Dialog.position.y
+    if self.continueComponent then
+      local cy
+      if self.height + y > SCREEN_HEIGHT then
+        cy = SCREEN_HEIGHT - self.border - self.continueComponent:GetTextHeight()
+      else
+        cy = y + self.height - self.border - self.continueComponent:GetTextHeight()
+      end
+      self.continueComponent:SetPosition(x, cy)
+    end
     if self.textComponent then
       self.textComponent:SetPosition(x, y)
     end
     if self.titleComponent then
-      y = y - self.titleComponent:GetHeight()
+      y = y - self.titleComponent:GetTextHeight() - self.border
       self.titleComponent:SetPosition(x, y)
     end
     if self.imageComponent then
-      local ix = x
-      local iy = y
+      local ix = Dialog.image.x
+      local iy = Dialog.image.y
       local ox = 0
-      local oy = self.imageComponent:GetHeight()
-      if self.titleComponent then
-        if Dialog.title.align then
-          if Dialog.title.align == "center" then
-            ix = (x + self.limit - self.border)/2
-            ox = self.imageComponent:GetWidth() / 2
-          elseif Dialog.title.align == "right" then
-            ix = self.limit - self.border
-            ox = self.imageComponent:GetWidth()
+      local oy = 0
+      if ix == nil and iy == nil then
+        ix = x
+        iy = y
+        oy = self.imageComponent:GetHeight()
+        if self.titleComponent then
+          if Dialog.title.align then
+            local currentwidth = Dialog.width or self.width
+            if Dialog.title.align == "center" then
+              ix = (x + currentwidth - self.border)/2
+              ox = self.imageComponent:GetWidth() / 2
+            elseif Dialog.title.align == "right" then
+              ix = currentwidth - self.border
+              ox = self.imageComponent:GetWidth()
+            end
           end
         end
       end
       self.imageComponent:SetPosition(ix, iy)
-      self.imageComponent:SetOrigin(ox, oy)
+      self.imageComponent:SetImageOrigin(ox, oy)
     end
   end
 end
 
 --[[
+proto DialogManager:Stop()
+.D This function stops the current dialog and reset all components.
+]]--
+function DialogManager:Stop()
+  self.channel.stop:push(true)
+  self.channel.text = nil
+  self.channel.speed = nil
+  self.start = false
+  self.currentdialog.start = false
+  self.currentdialog = nil
+  self.numDialog = 0
+  self.currentdialogtext = ""
+  self.channel = nil
+  self.thread = nil
+  self:ResetComponents()
+  self.dialogfinished = true
+end
+
+local function UnpackLine(pLine, pKey, pSep)
+  pLine = pLine:gsub(pKey, "")
+  local tdeb = 0
+  local tend
+  local result = {}
+  repeat
+    tend = pLine:find(pSep,tdeb+1)
+    local val = pLine:sub(tdeb,tend):gsub(pSep, "")
+    table.insert(result, val)
+    tdeb = tend
+  until (tend == nil)
+  return result
+end
+
+--[[
+proto DialogManager:UnpackDialogFile(File)
+.D This function read the given file to extract all datas for the dialogs.
+.P File
+Name and path of the file containing the dialog.
+.R Returns a table containing all datas extracted from the file.
+]]--
+function DialogManager:UnpackDialogFile(pFile)
+  local dialogs = {}
+
+  local defaultfont = {}
+  local defaultmusic = {}
+  local defaultposition = {}
+  local defaultwidth = nil
+
+  local currentdialog = {}
+  local newdialog = false
+
+  local dialogfont = {}
+  local dialogmusic = {}
+  local dialogposition = {}
+  local dialogwidth = nil
+  local dialogcontinue = {}
+  local dialogskip = {}
+  local currsubtext = {}
+  local dialogname = ""
+
+  for line in love.filesystem.lines(pFile) do
+    if line:find("DEFAULTFONT=", 1) then
+      local font = UnpackLine(line, "DEFAULTFONT=", "|")
+      if font[1] ~= "" then
+        defaultfont =  { name = font[1],  size = tonumber(font[2]) }
+      end
+
+    elseif line:find("DEFAULTMUSIC=", 1) then
+      local sound = UnpackLine(line, "DEFAULTMUSIC=", "|")
+      if sound[1] ~= "" then
+        defaultmusic = { file = sound[1], type = sound[2] or "stream" }
+      end
+
+    elseif line:find("DEFAULTPOSITION=", 1) then
+      local position = UnpackLine(line, "DEFAULTPOSITION=", "|")
+      if position[1] ~= "" then
+        defaultposition = { x = tonumber(position[1]), y = tonumber(position[2]) }
+      end
+
+    elseif line:find("DEFAULTWIDTH=", 1) then
+      defaultwidth = tonumber(UnpackLine(line, "DEFAULTWIDTH=", "|")[1])
+
+    elseif line == "START" then
+      newdialog = true
+      currentdialog = {}
+
+    elseif line == "STOP" then
+      newdialog = false
+      -- Traitement du dernier texte
+      if next(currsubtext) ~= nil then
+        if currsubtext.font or currsubtext.font == nil then
+          currsubtext.font = dialogfont or defaultfont
+          end
+        if currsubtext.music or currsubtext.music == nil then
+          currsubtext.music = dialogmusic or defaultmusic
+          end
+        if currsubtext.position or currsubtext.position == nil then
+          currsubtext.position = dialogposition or defaultposition
+        end
+        if currsubtext.width or currsubtext.width == nil then
+          currsubtext.width = dialogwidth or defaultwidth
+          end
+        if currsubtext.skip ~= nil and (currsubtext.skip.font or currsubtext.skip.font == nil) then
+            currsubtext.skip.font = dialogfont or defaultfont
+        end
+        table.insert(currentdialog, currsubtext)
+        currsubtext = {}
+      end
+
+      -- Préparation de l'entrée dans la table
+      dialogs[dialogname] = {}
+      -- Ajout du dialogue
+      dialogs[dialogname] = currentdialog
+      dialogname = ""
+
+    elseif newdialog then
+
+      if line:find("NAME=", 1) then
+        dialogname = UnpackLine(line, "NAME=", "|")[1]
+
+      elseif line:find("DIALOGFONT=", 1) then
+        local font = UnpackLine(line, "DIALOGFONT=", "|")
+        if font[1] ~= "" then
+          dialogfont =  { name = font[1],  size = tonumber(font[2]) }
+        end
+
+      elseif line:find("DIALOGMUSIC=", 1) then
+        local sound = UnpackLine(line, "DIALOGMUSIC=", "|")
+        if sound[1] ~= "" then
+          dialogmusic = { file = sound[1], type = sound[2] or "stream" }
+        end
+
+      elseif line:find("DIALOGPOSITION=", 1) then
+        local position = UnpackLine(line, "DIALOGPOSITION=", "|")
+        if position[1] ~= "" then
+          dialogposition = { x = tonumber(position[1]), y = tonumber(position[2]) }
+        end
+
+      elseif line:find("DIALOGWIDTH=", 1) then
+        dialogwidth = tonumber(UnpackLine(line, "DIALOGWIDTH=", "|")[1])
+
+      elseif line:find("DIALOGCONTINUE=", 1) then
+        dialogcontinue = UnpackLine(line, "DIALOGCONTINUE=", "|")[1]
+
+      elseif line:find("DIALOGSKIP=", 1) then
+        local skip = UnpackLine(line, "DIALOGSKIP=", "|")
+        if skip and skip[1] ~= "" then
+          dialogskip = {}
+          dialogskip.text = skip[1]
+          dialogskip.font = { name = skip[2],  size = tonumber(skip[3]) }
+        end
+
+      elseif line:find("TITLE=", 1) then
+
+        -- Ajout du sous-dialogue précédent
+        if next(currsubtext) ~= nil then
+          if currsubtext.font == nil then currsubtext.font = dialogfont or defaultfont end
+          if currsubtext.music == nil then currsubtext.music = dialogmusic or defaultmusic end
+          if currsubtext.position == nil then currsubtext.position = dialogposition or defaultposition end
+          table.insert(currentdialog, currsubtext)
+        end
+
+        local title = UnpackLine(line, "TITLE=", "|")
+        currsubtext = {}
+        currsubtext.title = {}
+        -- Texte du titre
+        currsubtext.title.text = title[1]
+        -- Police de caractères du titre
+        currsubtext.title.font = dialogfont or defaultfont or {}
+        if title[2] and title[2] ~= "" then currsubtext.title.font =  { name = title[2],  size = tonumber(title[3]) } end
+        -- Alignement du titre
+        currsubtext.title.align = "left"
+        if title[4] and title[4] ~= "" then currsubtext.title.align = string.lower(title[4]) end
+
+        currsubtext.continue = {}
+        currsubtext.continue = dialogcontinue
+        currsubtext.skip = {}
+        currsubtext.skip = dialogskip
+
+
+      elseif line:find("TEXT=", 1) then
+        currsubtext.text = UnpackLine(line, "TEXT=", "|")[1]
+
+      elseif line:find("IMAGE=", 1) then
+        local image = UnpackLine(line, "IMAGE=", "|")
+        currsubtext.image = {}
+        currsubtext.image.name = image[1]
+        currsubtext.image.x = image[2]
+        currsubtext.image.y = image[3]
+
+
+
+      elseif line:find("MUSIC=", 1) then
+        local sound = UnpackLine(line, "MUSIC=", "|")
+        if sound[1] ~= "" then
+          currsubtext.music = { file = sound[1], type = sound[2] or "stream" }
+        end
+
+      elseif line:find("POSITION=", 1) then
+        local position = UnpackLine(line, "POSITION=", "|")
+        if position[1] ~= "" then 
+          currsubtext.position = { x = tonumber(position[1]), y = tonumber(position[2]) }
+        end
+
+      elseif line:find("WIDTH=", 1) then
+        currsubtext.width = tonumber(UnpackLine(line, "WIDTH=", "|")[1])
+
+      end
+    end
+  end
+  return dialogs
+end
+
+
+--[[
 proto DialogManager:Update(dt)
-.D This function update the dialog text and increase the speed for displaying the text if the ActionKey is pressed.
+.D This function update all components and the dialog manager.
 .P dt
 Delta-time
-]]
+]]--
 function DialogManager:Update(dt)
+  for key, component in pairs(self.components) do
+    if component.Update then
+      component:Update(dt)
+    end
+  end
+  self:UpdateDialogManager(dt)
+end
+
+--[[
+proto DialogManager:UpdateDialogManager(dt)
+.D This function update the dialog text and increase the speed for displaying the text if the ActionKey is pressed. If the dialog text if completely displayed, this function shows the next dialog text.
+.P dt
+Delta-time
+]]--
+function DialogManager:UpdateDialogManager(dt)
   if self.currentdialog and self.currentdialog.start then
-    if love.keyboard.isDown(self.key) then
+    if self:IsActionKeyPressed() then
       local running = self.thread:isRunning()
       if running then
         self.keypressed = true
@@ -352,7 +722,7 @@ function DialogManager:Update(dt)
         self:RetreiveDisplayText()
         return
       end -- running
-      if self.keypressed then
+      if self.keypressed and self.dialogfinished == false then
         self:RetreiveDisplayText()
         return
       end -- self.keypressed
@@ -361,9 +731,11 @@ function DialogManager:Update(dt)
         self.currentdialog.start = false
         self:ResetComponents()
         self.start = false
+        self.dialogfinished = true
       else
-        local text = self.currentdialog[self.numDialog].text
-        self.thread:start(text)
+        self.currentdialogtext = self.currentdialog[self.numDialog].text
+--        local text = self.currentdialog[self.numDialog].text
+        self.thread:start(self.currentdialogtext)
         self:RestartComponents()
         return
       end
@@ -373,11 +745,11 @@ function DialogManager:Update(dt)
     end
     -- Récupération du texte à afficher
     self:RetreiveDisplayText()
+    if self.textComponent and self.currentdialogtext == self.textComponent:GetContent() then
+      self.continueComponent:SetVisible(true)
+    end
   end -- self.start
 end -- Update(dt)
-
-
-DialogManager.__call = function() return DialogManager.New() end
+--
 DialogManager.__index = DialogManager
-DialogManager.__tostring = function() return "DialogManager" end
 return DialogManager

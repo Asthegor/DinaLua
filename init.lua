@@ -15,19 +15,24 @@ local GameEngine = {
   ]]
 }
 
+local CurrentFile = (...):gsub("^(.*/+)", "")
+local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
+
+
+
+-- Require core elements
+local FunctionsFolder = CurrentFolder.."/fcts"
+local files = love.filesystem.getDirectoryItems(FunctionsFolder)
+for k, filename in ipairs(files) do
+  local file = filename:gsub('%.lua$', '')
+  require(FunctionsFolder.."/"..file)
+end
+
 -- Lists all sub-folders needed for the game engine to work properly.
-local CurrentFolder = (...):gsub('%/init$', '')
 local GameEngineFolders = {
   Managers  = CurrentFolder .. "/Managers",
   Templates = CurrentFolder .. "/Templates"
 }
--- Add all generic functions from the Functions folders
-local FctPath = CurrentFolder .. "/Functions"
-local files = love.filesystem.getDirectoryItems(FctPath)
-for k, filename in ipairs(files) do
-  local file = filename:gsub('%.lua$', '')
-  require(FctPath.. "/" .. file)
-end
 
 -- DO NOT MODIFY. DO NOT MODIFY.
 -- This variable MUST NOT be defined.
@@ -54,27 +59,26 @@ GameEngine.ScreenHeight = love.graphics.getHeight()
 
 
 --[[
-  proto GameEngine.AddComponent(ComponentName, Args...)  
-  .D This function creates a new component based on the given name with some arguments.
-.P ComponentName  
-Name of the component to create. Must not be nil.
+proto GameEngine:CreateComponent(ComponentType, Args...)  
+.D This function creates a new component based on the given name with some arguments.
+.P ComponentType
+Type of the component to create. Must not be nil.
 .P Args...
 Arguments to send to the component constructor. Can be none.
 .R Returns the component initialized with the arguments.
 ]]--
-function GameEngine.AddComponent(ComponentName, ComponentType, ...)
+function GameEngine:CreateComponent(ComponentType, ...)
   if not ComponentType then
     return nil
   end
-  if not GameEngineFiles then
+  if GameEngineFiles == nil then
     LoadGameEngineFiles()
   end
   local RequirePath = GameEngineFiles[string.lower(ComponentType)]
   if RequirePath then
-    local Component = require(RequirePath)
-    local newComponent = Component.New(ComponentName, ...)
-    table.insert(Components, newComponent)
-    return newComponent
+    local Component = require(RequirePath).New(...)
+    table.insert(Components, Component)
+    return Component
   end
   print("Component '"..tostring(ComponentType).."' not found.")
   return nil
@@ -93,18 +97,6 @@ function GameEngine.Draw()
 end
 
 --[[
-proto GameEngine.CallbackZOrder()
-.D This functions is used to ensure that all components are drawn in the right order by calling the function CallbackZOrder of its child elements.
-]]--
-function GameEngine.CallbackZOrder()
-  for key, component in pairs(Components) do
-    if component.CallbackZOrder then
-      component:CallbackZOrder()
-    end
-  end
-end
-
---[[
 proto GameEngine.Update(dt)  
 .D This function launch the Update function of all components created by GetComponent.
 .P dt  
@@ -112,11 +104,16 @@ Delta time.
 ]]--
 function GameEngine.Update(dt)
   for key, component in pairs(Components) do
+    if component.CallbackZOrder then
+      component:CallbackZOrder()
+    end
     if component.Update then
       component:Update(dt)
     end
   end
-  
 end
+
+
+GameEngine.__call = function(...) return GameEngine:CreateComponent(...) end
 
 return GameEngine

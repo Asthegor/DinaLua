@@ -41,9 +41,8 @@ proto const Image.New(ParamTable)
 Table containing all parameters which names are the same as the standard constructor. See the standard constructor for further details.
 .R Return an instance of Image object.
 ]]--
-function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
+function Image.New(File, X, Y, ScaleX, ScaleY, Z)
   local self = setmetatable({}, Image)
-  self.name = Name
   self.GameEngine = require('DinaGE')
 
   if type(File) == "table" then
@@ -57,6 +56,7 @@ function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
       self:SetPosition(File["X"], File["Y"])
       self:SetScale(File["ScaleX"], File["ScaleY"])
       self:SetZOrder(File["Z"])
+      self.visible = true
       return self
     end
     return nil
@@ -72,6 +72,7 @@ function Image.New(Name, File, X, Y, ScaleX, ScaleY, Z)
     self:SetPosition(X, Y)
     self:SetScale(ScaleX, ScaleY)
     self:SetZOrder(Z)
+    self.visible = true
     return self
   end
   return nil
@@ -97,7 +98,14 @@ proto Image:Draw()
 Limit in pixels that the image can not exceed.
 ]]--
 function Image:Draw()
+  if self.visible then
+    self:DrawImage()
+  end
+end
+function Image:DrawImage()
+  love.graphics.setColor(1,1,1,1)
   love.graphics.draw(self.source, self.x, self.y, self.r, self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
+  love.graphics.setColor(1,1,1,1)
 end
 
 --[[
@@ -131,7 +139,7 @@ end
 proto Image:GetOrigin()
 .D This function returns the position of the origin of the image.
 .R Returns the position on the X and Y axis of the image origin.
-]]
+]]--
 function Image:GetOrigin()
   return self.ox, self.oy
 end
@@ -140,7 +148,7 @@ end
 proto Image:GetName()
 .D This function returns the name of the image.
 .R Returns the name of the image.
-]]
+]]--
 function Image:GetName()
   return self.name
 end
@@ -150,7 +158,7 @@ end
 proto Image:GetPosition()
 .D This function returns the position of the image.
 .R Returns the position on the X and Y axis of the image.
-]]
+]]--
 function Image:GetPosition()
   return self.x, self.y
 end
@@ -190,13 +198,20 @@ proto Image:SetNewImage(File)
 Path and name of the new image.
 ]]--
 function Image:SetNewImage(File)
-  if File and File ~= self.filename then
+  if File == nil then
+    File = ""
+  end
+ if File ~= "" and File ~= self.filename then
     self.filename = File
     self.source = love.graphics.newImage(File)
     self.height = self.source:getHeight()
     self.width = self.source:getWidth()
     self.limit = nil
+    self.visible = true
+  elseif File == "" then
+    self.visible = false
   end
+  self.filename = File
 end
 
 --[[

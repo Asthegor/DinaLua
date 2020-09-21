@@ -1,15 +1,25 @@
+local soc = require('socket')
+channel = {}
+channel.text = love.thread.getChannel('NewText')
+channel.speed = love.thread.getChannel('Speed')
+channel.stop = love.thread.getChannel('Stop')
+
 local Dialog = ...
 
+local function utf8iter(str)
+  return str:gfind("([%z\1-\127\194-\244][\128-\191]*)")
+end
+
 if Dialog then
-  local soc = require('socket')
-  channel = {}
-  channel.text = love.thread.getChannel('NewText')
-  channel.speed = love.thread.getChannel('Speed')
 
   local wait = 0.1
   local text = ""
-  for i=1, string.len(Dialog) do
-    text = string.sub(Dialog,1,i)
+  for char in utf8iter(Dialog) do
+    local stop = channel.stop:pop()
+    if stop then
+      return
+    end
+    text = text .. char
     channel.text:push(text)
     local speed = channel.speed:pop()
     local curwait = wait

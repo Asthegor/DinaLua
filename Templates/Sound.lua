@@ -31,31 +31,18 @@ Number of time the sound could be played. -1 to indicate infinite.
 Volume of the sound. Normal sound is 1 (default).
 .R Returns an instance of Sound object
 ]]--
-function Sound.New(Name, File, Type, NbLoop, Volume)
+function Sound.New(File, Type, NbLoop, Volume)
   local self = setmetatable({}, Sound)
-  self.name = Name
-  if type(File) == "table" then
-    if File["File"] then
-      local Type = File["Type"]
-      if not Type or Type == "" then
-        Type = "stream"
-      end
-      self.source = love.audio.newSource(File["File"], Type)
-      self:SetLooping(File["NbLoop"])
-      self:SetVolume(SetDefaultNumber(File["Volume"], 1))
-      return self
-    end
+  self.filename = File
+  self.type = Type
+  if not self.type or self.type == "" then
+    self.type = "stream"
   end
-  if File then
-    if not Type or Type == "" then
-      Type = "stream"
-    end
-    self.source = love.audio.newSource(File, Type)
-    self:SetLooping(NbLoop)
-    self:SetVolume(SetDefaultNumber(Volume, 1))
-    return self
-  end
-  return nil
+  self.source = love.audio.newSource(self.filename, self.type)
+  self:SetLooping(NbLoop)
+  self:SetVolume(SetDefaultNumber(Volume, 1))
+  self.paused = false
+  return self
 end
 
 --[[
@@ -69,12 +56,24 @@ function Sound:ChangeVolume(Volume)
 end
 
 --[[
-proto Sound:GetName()
-.D This function returns the name of the sound.
-.R Returns the name of the sound.
-]]
-function Sound:GetName()
-  return self.name
+proto Sound:IsPlaying()
+.D This function returns true if the sound is playing; false otherwise.
+.R Returns true if the sound is playing; false otherwise.
+]]--
+function Sound:IsPlaying()
+  if self.source then
+    return self.source:isPlaying()
+  end
+  return false
+end
+
+--[[
+proto Sound:IsSameSound()
+.D This function returns true if the sound is the same name and type as the given one; false otherwise.
+.R Returns true if the sound is the same name and type as the given one; false otherwise.
+]]--
+function Sound:IsSameSound(File, Type)
+  return self.filename == File and self.type == Type
 end
 
 --[[
@@ -82,7 +81,12 @@ proto Sound:Pause()
 .D Pause the current sound.
 ]]--
 function Sound:Pause()
-  self.source:pause()
+  if self.paused then
+    self.source:pause()
+  else
+    self.source:play()
+  end
+  self.paused = not self.paused
 end
 
 --[[
@@ -92,8 +96,8 @@ proto Sound:Play()
 function Sound:Play()
   if self.volume then
     self.source:setVolume(self.volume)
-    self.source:play()
   end
+  self.source:play()
 end
 
 --[[
@@ -103,12 +107,9 @@ proto Sound:SetLooping(NbLoop)
 Number of time the sound can be played. -1 for infinite and 0 for none.
 ]]--
 function Sound:SetLooping(NbLoop)
-  if type(NbLoop) == 'number' then
-    if NbLoop < 0 then NbLoop = -1 end
-    self.nbloop = NbLoop
-  else
-    self.nbloop = 0
-  end
+  NbLoop = SetDefaultNumber(NbLoop, 0)
+  if NbLoop < 0 then NbLoop = -1 end
+  self.nbloop = NbLoop
 end
 
 --[[
@@ -158,7 +159,7 @@ proto Sound:Update(dt)
 Delta time.
 ]]--
 function Sound:Update(dt)
-  if not self.source:isPlaying() then
+  if not self.paused and self.source:isPlaying() then
     if self.nbloop < 0 then
       self:Play()
     elseif self.nbloop > 0 then
@@ -168,7 +169,5 @@ function Sound:Update(dt)
   end
 end
 
-Sound.__call = function() return Sound.New() end
 Sound.__index = Sound
-Sound.__tostring = function() return "Sound" end
 return Sound

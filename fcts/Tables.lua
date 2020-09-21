@@ -1,7 +1,7 @@
 local Fct_Tables = {
-  _VERSION     = 'Dina GE Fct_Tables v1.2',
-  _DESCRIPTION = 'Fct_Tables in Dina Game Engine',
-  _URL         = 'https://dina.lacombedominique.com/documentation/functions/fct_tables/',
+  _VERSION     = 'Dina GE Table Functions v1.2',
+  _DESCRIPTION = 'Table functions in Dina Game Engine',
+  _URL         = 'https://dina.lacombedominique.com/documentation/functions/tables/',
   _LICENSE     = [[
     ZLIB Licence
 
@@ -24,4 +24,33 @@ Table to sort by the Z-Order.
 ]]--
 function SortTableByZOrder(Table)
   table.sort(Table, function(a,b) return ((a.GetZOrder and a:GetZOrder()) or 0) < ((b.GetZOrder and b:GetZOrder()) or 0) end)
+end
+
+--[[
+proto PrintTable(Table, offset)
+.D <strong>DEBUG FUNCTION:</strong> This function print the content of a table. If the table has some attributes which are also tables, the function will print their content too.
+.P Table
+Table to print.
+.P offset
+Offset in order to display a tree.
+]]--
+function PrintTable(pTable, offset)
+  offset = offset or 1
+  local i = 1
+  for key, value in pairs(pTable) do
+    if type(value) == "table" then
+      print(string.rep("| ", offset-1).."|-"..tostring(key))
+      PrintTable(value, offset+1)
+    else
+      local str = string.rep("| ", offset-1)
+      if i == #pTable then
+        str = str..">-"
+      else
+        str = str.."|-"
+      end
+      str = str..tostring(key).."="..tostring(value)
+      print(str)
+      i = i + 1
+    end
+  end
 end

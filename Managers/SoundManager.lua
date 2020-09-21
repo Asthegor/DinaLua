@@ -38,7 +38,7 @@ Path of the file containing the sound.
 Type of the sound : 'static', 'stream' or 'queue'
 ]]--
 function SoundManager:AddSound(Name, File, Type)
-  local sound = GameEngine.AddComponent(Name, "Sound", File, Type)
+  local sound = self.GameEngine.CreateComponent(Name, "Sound", File, Type)
   if sound then
     table.insert(self.sounds, sound)
   end

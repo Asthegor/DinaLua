@@ -23,27 +23,27 @@ proto const MenuManager.New()
 function MenuManager.New()
   local self = setmetatable({}, MenuManager)
   self.GameEngine = require("DinaGE")
-  self.Components = {}
+  self.components = {}
   return self
 end
 
 --[[
-proto MenuManager:AddComponent(ComponentName, ComponentType, ...)
+proto MenuManager:AddComponent(ComponentName, ComponentType, Args...)
 .D This function add a new component, defined by its given name, to the menu. Cannot add a MenuManager to the components
 .P ComponentName
 Name of the component to add to the menu.
 .P ComponentType
 Type of the component to add to the menu. Cannot be "MenuManager".
-.P ...
+.P Args...
 Other arguments needed to create the component.
 .R Returns a new instance of the component.
 ]]--
 function MenuManager:AddComponent(ComponentName, ComponentType, ...)
-  if not self.Components then
-    self.Components = {}
+  if not self.components then
+    self.components = {}
   end
-  local component = self.GameEngine.AddComponent(ComponentName, ComponentType, ...)
-  table.insert(self.Components, component)
+  local component = self.GameEngine.CreateComponent(ComponentName, ComponentType, ...)
+  table.insert(self.components, component)
   return component
 end
 
@@ -52,7 +52,18 @@ proto MenuManager.CallbackZOrder()
 .D This functions is used to ensure that all components are drawn in the right order.
 ]]--
 function MenuManager:CallbackZOrder()
-  SortTableByZOrder(self.Components)
+  local calculate = false
+  for key, component in pairs(self.components) do
+    if component.IsZOrderChanged then
+      if component:IsZOrderChanged() == true then
+        calculate = true
+        break
+      end
+    end
+  end
+  if calculate then
+    SortTableByZOrder(self.components)
+  end
 end
 
 
@@ -77,13 +88,14 @@ proto MenuManager:Draw()
 .D This function launchs the Draw function of all its components.
 ]]--
 function MenuManager:Draw()
-  local components = self.Components
-  for index = 1, #components do
-    local component = components[index]
+  love.graphics.push()
+  for index = 1, #self.components do
+    local component = self.components[index]
     if component.Draw then
       component:Draw()
     end
   end
+  love.graphics.pop()
 end
 
 --[[
@@ -94,7 +106,7 @@ Name of the component
 .R Returns the component if found; nil otherwise.
 ]]--
 function MenuManager:GetComponentByName(Name)
-  return self.Components[Name]
+  return self.components[Name]
 end
 
 --[[
@@ -102,7 +114,7 @@ proto MenuManager:StopSounds()
 .D This function stop all sounds.
 ]]--
 function MenuManager:StopSounds()
-  for _, component in pairs(self.Components) do
+  for _, component in pairs(self.components) do
     if tostring(component) == "Sound" then
       component:Stop()
     end
@@ -116,9 +128,8 @@ proto MenuManager:Update(dt)
 Deltatime
 ]]--
 function MenuManager:Update(dt)
-  local components = self.Components
-  for index = 1, #components do
-    local component = components[index]
+  for index = 1, #self.components do
+    local component = self.components[index]
     if component.Update then
       component:Update(dt)
     end

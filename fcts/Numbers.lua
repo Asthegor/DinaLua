@@ -29,7 +29,6 @@ Max limit value.
 function IsInLimits(Num, Min, Max)
   return IsNumber(Num) and IsNumber(Min) and IsNumber(Max) and Min <= Num and Num <= Max
 end
-
 --[[
 proto IsNumber(Data)
 .D Check if Data is a number.
