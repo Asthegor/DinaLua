@@ -1,4 +1,19 @@
-local LevelManager = {}
+local LevelManager = {
+  _TITLE       = 'Dina GE Level Manager',
+  _VERSION     = '2.0.3',
+  _URL         = 'https://dina.lacombedominique.com/documentation/managers/levelmanager/',
+  _LICENSE     = [[
+    ZLIB Licence
+
+    Copyright (c) 2019 LACOMBE Dominique
+
+    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+  ]]
+}
 
 function LevelManager.New()
   local self = setmetatable({}, LevelManager)
@@ -38,10 +53,11 @@ function LevelManager:loadTileset(Tileset)
 
   local nbRows = math.ceil((tih - (tm * 2)) / (tth + ts))
   local nbCols = math.ceil((tiw - (tm * 2)) / (ttw + ts))
+  local x, y
   for r = 1, nbRows do
     for c = 1, nbCols do
-      local x = (c - 1) * (ttw + ts) + tm
-      local y = (r - 1) * (tth + ts) + tm
+      x = (c - 1) * (ttw + ts) + tm
+      y = (r - 1) * (tth + ts) + tm
       local squad = {}
       squad.obj = love.graphics.newQuad(x, y, ttw, tth, tiw, tih)
       squad.width = ttw
@@ -162,11 +178,10 @@ function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
         local quad = self.squads[numTile].obj
         local qw = self.squads[numTile].width
         local qh = self.squads[numTile].height
-        local x = (col-1) * tw * ScaleX
-        local y = (row-1) * th * ScaleY
         local diffh = qh - th
-        local ox, oy = 0, 0
-        local offset = 0
+        local ox, oy, offset = 0, 0, 0
+        x = (col-1) * tw * ScaleX
+        y = (row-1) * th * ScaleY
         if r > 0 then
           -- rotation 90° vers la droite
           ox = ox + qw - tw
@@ -193,7 +208,6 @@ function LevelManager:drawImage(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
   if not self:isDrawable(Layer) then
     return
   end
-  local _, _, tw, th = self:getDimensions()
   local x = (Layer.offsetx - OffsetX) * ScaleX
   local y = (Layer.offsety - OffsetY) * ScaleY
 
@@ -208,20 +222,12 @@ end
 function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
   local numTile, r, sx, sy = LevelManager:getRotation(Object.gid)
   if numTile > 0 then
-    local w, h, tw, th = self:getDimensions()
+    local _, _, tw, th = self:getDimensions()
     local x = (Object.x - OffsetX) * ScaleX
     local y = (Object.y - OffsetY) * ScaleY
     local numimg = self.squads[numTile].numimg
     local image = self.images[numimg]
-    local oh = Object.height
     local ow = Object.width
---    local ox, oy = 0, 0
---    if sx < 0 then
---      ox = Object.width
---    end
---    if sy < 0 then
---      oy = Object.height
---    end
     local ox, oy = 0, 0
     if r > 0 then
       oy = oy + th
@@ -233,16 +239,6 @@ function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, Sc
     if sx < 0 then
       ox = ox + ow
     end
-
---    if r == 0 and Object.rotation > 0 then
---      local ro = Object.rotation
---      if ro >= 180 then
---        ro = ro - 360
---      end
---      y = y + Object.height
---      oy = Object.height
---      r = math.rad(ro)
---    end
 
     local quad = self.squads[numTile].obj
     love.graphics.setColor(1,1,1,Alpha)
@@ -258,7 +254,6 @@ function LevelManager:drawObject(Object, OffsetX, OffsetY, ScaleX, ScaleY)
   if not self:isDrawable(Object) then
     return
   end
-  local _,_,tw,th = self:getDimensions()
   if Object.gid ~= nil then
     self:drawObjectTile(Object, OffsetX, OffsetY, Object.opacity, ScaleX, ScaleY)
   else
@@ -398,18 +393,18 @@ function LevelManager:restoreObjectOpacity(Object)
   end
 end
 function LevelManager:setOpacity(Alpha)
-  for k,v in ipairs(self.layers) do
+  for _,v in ipairs(self.layers) do
     self:setLayerOpacity(v, Alpha)
   end
-  for k,v in ipairs(self.objects) do
+  for _,v in ipairs(self.objects) do
     self:setObjectOpacity(v, Alpha)
   end
 end
 function LevelManager:restoreOpacity()
-  for k,v in ipairs(self.layers) do
+  for _,v in ipairs(self.layers) do
     self:restoreLayerOpacity(v)
   end
-  for k,v in ipairs(self.objects) do
+  for _,v in ipairs(self.objects) do
     self:restoreObjectOpacity(v)
   end
 end
@@ -488,7 +483,7 @@ end
 --* Utils
 --*************************************************************
 function LevelManager:getLayerTileIdAtPos(Layer, Row, Col)
-  local mw, mh = self:getDimensions()
+  local mw, _ = self:getDimensions()
   local id = Layer.data[(Row-1) * mw + Col]
   return id or 0
 end
@@ -542,13 +537,7 @@ function LevelManager:isDrawable(Item)
   return Item.visible == true and Item.opacity > 0
 end
 function LevelManager:isValidImgId(ImgId)
---  for _,v in ipairs(self.tileids) do
---    if v == ImgId then
---      return true
---    end
---  end
---  return false
-  return self.tileids[ImgId] or false
+  return self.tileids[ImgId] and true or false
 end
 function LevelManager:getRotation(pNum)
   local FLIPH = 0x80000000
@@ -617,7 +606,7 @@ function LevelManager:ConvertCoordAndSizeToRowCol(X, Y)
 end
 --
 function LevelManager:reload()
-  for k,layer in ipairs(self.layers) do
+  for _,layer in ipairs(self.layers) do
     self:restoreLayerOpacity(layer)
     self:restoreLayerDatas(layer)
   end
@@ -637,6 +626,21 @@ function LevelManager:resetObjects()
   end
 end
 
+function LevelManager:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+LevelManager.__tostring = function(NoTitle) return LevelManager:ToString(NoTitle) end
 LevelManager.__index = LevelManager
-LevelManager.__tostring = function() return "LevelManager" end
 return LevelManager

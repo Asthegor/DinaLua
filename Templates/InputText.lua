@@ -1,6 +1,6 @@
 local InputText = {
-  _VERSION     = 'Dina GE InputText Template v1.3',
-  _DESCRIPTION = 'InputText Template in Dina GE',
+  _TITLE       = 'Dina GE InputText',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/inputtext/',
   _LICENSE     = [[
     ZLIB Licence
@@ -117,5 +117,22 @@ function InputText:KeyPress(key)
   end
 end
 
+function InputText:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  str = str .. Parent:ToString(true)
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+InputText.__tostring = function(NoTitle) return InputText:ToString(NoTitle) end
 InputText.__index = InputText
 return InputText

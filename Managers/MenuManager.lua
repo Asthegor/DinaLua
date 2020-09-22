@@ -1,6 +1,6 @@
 local MenuManager = {
-  _VERSION     = 'Dina GE Menu Manager v1.3',
-  _DESCRIPTION = 'Menu Manager in Dina Game Engine',
+  _TITLE       = 'Dina GE Menu Manager',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/menumanager/',
   _LICENSE     = [[
     ZLIB Licence
@@ -136,7 +136,22 @@ function MenuManager:Update(dt)
   end
 end
 
+function MenuManager:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+MenuManager.__tostring = function(NoTitle) return MenuManager:ToString(NoTitle) end
 MenuManager.__call = function() return MenuManager.New() end
 MenuManager.__index = MenuManager
-MenuManager.__tostring = function() return "MenuManager" end
 return MenuManager

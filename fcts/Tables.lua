@@ -1,6 +1,6 @@
 local Fct_Tables = {
-  _VERSION     = 'Dina GE Table Functions v1.2',
-  _DESCRIPTION = 'Table functions in Dina Game Engine',
+  _VERSION     = '2.0.3',
+  _TITLE       = 'Dina GE Table Functions',
   _URL         = 'https://dina.lacombedominique.com/documentation/functions/tables/',
   _LICENSE     = [[
     ZLIB Licence

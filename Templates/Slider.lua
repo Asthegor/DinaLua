@@ -1,21 +1,61 @@
-local Slider = {}
+local Slider = {
+  _TITLE       = 'Dina GE Slider',
+  _VERSION     = '2.0.3',
+  _URL         = 'https://dina.lacombedominique.com/documentation/templates/slider/',
+  _LICENSE     = [[
+    ZLIB Licence
+
+    Copyright (c) 2020 LACOMBE Dominique
+
+    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+        3. This notice may not be removed or altered from any source distribution.
+  ]]
+}
 
 -- Déclaration du parent
 local CurrentFile = (...):gsub("^(.*/+)", "")
 local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 local Parent = require(CurrentFolder.."/Panel")
 setmetatable(Slider, {__index = Parent})
-
 local Button = require(CurrentFolder.."/Button")
 
-function Slider.New(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, Type, Z)
+
+--[[
+proto const Slider.New(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, Orientation, Z)
+.D This function creates a new Text object.
+.P X
+Position on the X axis of the text.
+.P Y
+Position on the Y axis of the text.
+.P Width
+Width of the space occupied by the text.
+.P Height
+Haight of the space occupied by the text.
+.P Value
+Current value of the slider.
+.P Max
+Max value of the slider.
+.P SliderColor
+Color of the slider (bar).
+.P CursorColor
+Color of the cursor.
+.P Orientation
+Orientation of the slider : horizontal or vertical.
+.P Z
+Z-Order of the slider.
+.R Return an instance of Slider object.
+]]--
+function Slider.New(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, Orientation, Z)
   local self = setmetatable(Parent.New(X, Y, Width, Height, nil, nil, Z), Slider)
-  self.type = Type == "vertical" and Type or "horizontal"
+  self.orientation = Orientation == "vertical" and Orientation or "horizontal"
   self.value = Value
   self.max = Max
   self.slidercolor = SliderColor or {1,1,1,1}
   local cursorx, cursory, cursorw, cursorh
-  if self.type == "vertical" then
+  if self.orientation == "vertical" then
     self.thin = self.width * .2
     cursorw = self.width
     cursorh = self.thin
@@ -46,7 +86,7 @@ end
 
 function Slider:ChangeCursorPosition()
   local cursorx, cursory
-  if self.type == "vertical" then
+  if self.orientation == "vertical" then
     cursorx = self.x
     cursory = self.y + self.value * self.step
   else
@@ -79,7 +119,7 @@ end
 function Slider:SetPosition(X, Y)
   self.x = X
   self.y = Y
-  if self.type == "vertical" then
+  if self.orientation == "vertical" then
     self.xs = self.x + self.width/2 - self.thin/2
     self.ys = self.y
   else
@@ -117,11 +157,10 @@ function Slider:Update(dt)
 end
 
 function Slider:UpdateSlider(dt)
-  dt = math.min(dt, 1/60)
   self:UpdatePanel(dt)
   self.cursor:Update(dt)
   if self.cursor.pressed and love.mouse.isDown(1) then
-    if self.type == "vertical" then
+    if self.orientation == "vertical" then
       local my = love.mouse.getY()
       if my < self.cursor.y then
         local newval = math.floor((self.cursor.y-my) / self.step)
@@ -143,8 +182,23 @@ function Slider:UpdateSlider(dt)
   end
 end
 
-
+function Slider:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")"
+  end
+  str = str .. Parent:ToString(true)
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Slider.__tostring = function(NoTitle) return Slider:ToString(NoTitle) end
 Slider.__call = function() return Slider.new() end
-Slider.__tostring = function() return "DinaGE GUI Slider" end
 Slider.__index = Slider
 return Slider

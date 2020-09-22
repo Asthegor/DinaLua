@@ -1,6 +1,6 @@
 local Image = {
-  _VERSION     = 'Dina GE Image Template v1.3',
-  _DESCRIPTION = 'Image Template in Dina GE',
+  _TITLE       = 'Dina GE Image',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/image/',
   _LICENSE     = [[
     ZLIB Licence
@@ -211,7 +211,6 @@ function Image:SetNewImage(File)
   elseif File == "" then
     self.visible = false
   end
-  self.filename = File
 end
 
 --[[
@@ -301,7 +300,22 @@ function Image:SetZOrder(Z)
 end
 
 
+function Image:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Image.__tostring = function(NoTitle) return Image:ToString(NoTitle) end
 Image.__call = function() return Image.New() end
 Image.__index = Image
-Image.__tostring = function() return "Image" end
 return Image

@@ -1,6 +1,6 @@
 Colors = {
-  _VERSION     = 'Dina GE Colors v1.1',
-  _DESCRIPTION = 'Enumeration of colors, some are used in Dina Game Engine',
+  _VERSION     = '1.1',
+  _TITLE       = 'Dina GE Colors',
   _LICENSE     = [[
     ZLIB Licence
 

@@ -1,11 +1,11 @@
 local SoundManager = {
-  _VERSION     = 'Dina GE Sound Manager v1.3',
-  _DESCRIPTION = 'Sounds and Musics Manager in Dina Game Engine',
+  _VERSION     = '2.0.3',
+  _TITLE       = 'Dina GE Sound Manager',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/soundmanager/',
   _LICENSE     = [[
     ZLIB Licence
 
-    Copyright (c) 2019 LACOMBE Dominique
+    Copyright (c) 2020 LACOMBE Dominique
 
     This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
     Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -118,7 +118,22 @@ function SoundManager:Update(dt)
   end
 end
 
+function SoundManager:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+SoundManager.__tostring = function(NoTitle) return SoundManager:ToString(NoTitle) end
 SoundManager.__call = function() return SoundManager.New() end
 SoundManager.__index = SoundManager
-SoundManager.__tostring = function() return "SoundManager" end
 return SoundManager

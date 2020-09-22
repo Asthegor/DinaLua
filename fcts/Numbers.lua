@@ -1,7 +1,7 @@
 local Fct_Numbers = {
-  _VERSION     = 'Dina GE Fct_Numbers v1.1',
-  _DESCRIPTION = 'Fct_Numbers in Dina Game Engine',
-  _URL         = 'https://dina.lacombedominique.com/documentation/functions/fct_numbers/',
+  _TITLE       = 'Dina GE Numbers',
+  _VERSION     = '1.1',
+  _URL         = 'https://dina.lacombedominique.com/documentation/functions/numbers/',
   _LICENSE     = [[
     ZLIB Licence
 

@@ -1,6 +1,6 @@
 local Animation = {
-  _VERSION     = 'Dina GE Animation Template v1.3',
-  _DESCRIPTION = 'Animation Template in Dina GE',
+  _TITLE       = 'Dina GE Animation',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/animation/',
   _LICENSE     = [[
     ZLIB Licence
@@ -102,7 +102,23 @@ function Animation:IsRunning()
   return self.run
 end
 --
+function Animation:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  str = str .. Parent:ToString(true)
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Animation.__tostring = function(NoTitle) return Animation:ToString(NoTitle) end
 Animation.__call = function() return Animation.New() end
 Animation.__index = Animation
-Animation.__tostring = function() return "Animation" end
 return Animation

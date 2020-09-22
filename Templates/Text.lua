@@ -1,11 +1,11 @@
 local Text = {
-  _VERSION     = 'Dina GE Text Template v1.3',
-  _DESCRIPTION = 'Text Template in Dina GE',
+  _TITLE       = 'Dina GE Text',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
     ZLIB Licence
 
-    Copyright (c) 2019 LACOMBE Dominique
+    Copyright (c) 2020 LACOMBE Dominique
 
     This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
     Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -317,7 +317,23 @@ function Text:UpdateVisibility(dt)
   end --self.waitTime <= 0 and self.displayTime < 0
 end
 
+function Text:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  str = str .. Parent:ToString(true)
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Text.__tostring = function(NoTitle) return Text:ToString(NoTitle) end
 Text.__call = function() return Text.New() end
 Text.__index = Text
-Text.__tostring = function() return "Text" end
 return Text

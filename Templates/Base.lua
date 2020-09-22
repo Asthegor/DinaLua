@@ -1,7 +1,7 @@
 local Base = {
-  _VERSION     = 'Dina GE Base element v1.3.2',
-  _DESCRIPTION = 'Base element in Dina Game Engine',
-  _URL         = 'https://dina.lacombedominique.com/documentation/core/base/',
+  _TITLE       = 'Dina GE Base element',
+  _VERSION     = '2.0.3',
+  _URL         = 'https://dina.lacombedominique.com/documentation/templates/base/',
   _LICENSE     = [[
     ZLIB Licence
 
@@ -105,5 +105,21 @@ function Base:Update()
 end
 
 -- Informations système
+function Base:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Base.__tostring = function(NoTitle) return Base:ToString(NoTitle) end
 Base.__index = Base
 return Base

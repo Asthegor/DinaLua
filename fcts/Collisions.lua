@@ -1,6 +1,6 @@
 local Fct_Collision = {
-  _VERSION     = 'Dina GE Collision Functions v1.2',
-  _DESCRIPTION = 'Collision functions in Dina Game Engine',
+  _VERSION     = '1.2',
+  _TITLE       = 'Dina GE Collision Functions',
   _URL         = 'https://dina.lacombedominique.com/documentation/functions/collisions/',
   _LICENSE     = [[
     ZLIB Licence

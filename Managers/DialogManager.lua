@@ -36,13 +36,13 @@ Position de la conversation courante.
 ]]--
 
 local DialogManager = {
-  _VERSION     = 'Dina GE Dialog Manager v1.3',
-  _DESCRIPTION = 'Dialog Manager in Dina Game Engine',
+  _TITLE       = 'Dina GE Dialog Manager',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/dialogmanager/',
   _LICENSE     = [[
     ZLIB Licence
 
-    Copyright (c) 2019 LACOMBE Dominique
+    Copyright (c) 2020 LACOMBE Dominique
 
     This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
     Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -149,9 +149,8 @@ proto DialogManager:Draw()
 ]]--
 function DialogManager:Draw()
   if self.currentdialog and self.currentdialog.start then
-    local currentwidth = self.currentdialog.width or self.width
     love.graphics.setColor(1,1,1,1)
-    for key, component in pairs(self.components) do
+    for _, component in pairs(self.components) do
       if component.Draw then
         component:Draw()
       end
@@ -181,12 +180,6 @@ function DialogManager:IsActionKeyPressed()
     local numbtn = string.sub(self.key, -1)
     return love.mouse.isDown(tonumber(numbtn))
   end
---  if self.key == "mb1" then
---    return love.mouse.isDown(1)
---  end
---  if self.key == "mb2" then
---    return love.mouse.isDown(2)
---  end
   return love.keyboard.isDown(self.key)
 end
 
@@ -667,8 +660,6 @@ function DialogManager:UnpackDialogFile(pFile)
         currsubtext.image.x = image[2]
         currsubtext.image.y = image[3]
 
-
-
       elseif line:find("MUSIC=", 1) then
         local sound = UnpackLine(line, "MUSIC=", "|")
         if sound[1] ~= "" then
@@ -698,7 +689,7 @@ proto DialogManager:Update(dt)
 Delta-time
 ]]--
 function DialogManager:Update(dt)
-  for key, component in pairs(self.components) do
+  for _, component in pairs(self.components) do
     if component.Update then
       component:Update(dt)
     end
@@ -751,5 +742,21 @@ function DialogManager:UpdateDialogManager(dt)
   end -- self.start
 end -- Update(dt)
 --
+function DialogManager:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+DialogManager.__tostring = function(NoTitle) return DialogManager:ToString(NoTitle) end
 DialogManager.__index = DialogManager
 return DialogManager
