@@ -44,8 +44,7 @@ function LevelManager:loadTileset(Tileset)
   while string.find(path, "%.%.") ~= nil do
     path = string.sub(path, string.find(path, "%.%.") + 3)
   end
-  local image = love.graphics.newImage(path)
-  table.insert(self.images, image)
+  table.insert(self.images, love.graphics.newImage(path))
   table.insert(self.tilesets, Tileset)
   for i = 1, Tileset.tilecount do
     self.tileids[Tileset.firstgid + i - 1] = true
@@ -75,9 +74,6 @@ function LevelManager:loadObjects(Layer)
       object.originalX = object.x
     end
     if object.originalY == nil then
-      if object.gid then
-        object.y = object.y - object.height
-      end
       object.originalY = object.y
     end
     object.col = math.floor(object.x / tw) + 1
@@ -119,8 +115,7 @@ function LevelManager:loadLayer(Layer)
     while string.find(path, "%.%.") ~= nil do
       path = string.sub(path, string.find(path, "%.%.") + 3)
     end
-    local image = love.graphics.newImage(path)
-    table.insert(self.images, image)
+    table.insert(self.images, love.graphics.newImage(path))
     Layer.numImg = #self.images
     table.insert(self.layers, Layer)
 
@@ -141,17 +136,13 @@ function LevelManager:Load(File)
   end
 
   for i = 1, #self.file.tilesets do
-    local tileset = self.file.tilesets[i]
-    self:loadTileset(tileset)
+    self:loadTileset(self.file.tilesets[i])
   end
 
   for i = 1, #self.file.layers do
-    local layer = self.file.layers[i]
-    self:loadLayer(layer)
+    self:loadLayer(self.file.layers[i])
   end
-  local canvasWidth = self.file.width * self.file.tilewidth
-  local canvasHeight = self.file.height * self.file.tileheight
-  self.canvas = love.graphics.newCanvas(canvasWidth, canvasHeight)
+  self.canvas = love.graphics.newCanvas(self.file.width * self.file.tilewidth, self.file.height * self.file.tileheight)
 end
 --*************************************************************
 --* Drawings
@@ -179,7 +170,7 @@ function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
         local qw = self.squads[numTile].width
         local qh = self.squads[numTile].height
         local diffh = qh - th
-        local ox, oy, offset = 0, 0, 0
+        local ox, oy = 0, 0
         x = (col-1) * tw * ScaleX
         y = (row-1) * th * ScaleY
         if r > 0 then
@@ -195,8 +186,7 @@ function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
           oy = oy + th
         else
           -- aucune modification
-          offset = math.abs(diffh) > 0 and diffh or 0
-          oy = oy + offset
+          oy = oy + math.abs(diffh) > 0 and diffh or 0
         end
         love.graphics.draw(image, quad, x+offsetX, y+offsetY, r, sx*ScaleX, sy*ScaleY, ox, oy)
       end
@@ -222,13 +212,15 @@ end
 function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
   local numTile, r, sx, sy = LevelManager:getRotation(Object.gid)
   if numTile > 0 then
+    local numimg = self.squads[numTile].numimg
+    local image = self.images[numimg]
+    local quad = self.squads[numTile].obj
     local _, _, tw, th = self:getDimensions()
     local x = (Object.x - OffsetX) * ScaleX
     local y = (Object.y - OffsetY) * ScaleY
-    local numimg = self.squads[numTile].numimg
-    local image = self.images[numimg]
+    local oh = Object.height
     local ow = Object.width
-    local ox, oy = 0, 0
+    local ox, oy = 0, oh
     if r > 0 then
       oy = oy + th
       ox = ox + ow - tw
@@ -239,15 +231,21 @@ function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, Sc
     if sx < 0 then
       ox = ox + ow
     end
-
-    local quad = self.squads[numTile].obj
+    if r == 0 and math.abs(Object.rotation) > 0 then
+      local ro = Object.rotation
+      if ro >= 180 then
+        ro = ro - 360
+      end
+      oy = Object.height
+      r = math.rad(ro)
+    end
     love.graphics.setColor(1,1,1,Alpha)
     love.graphics.draw(image, quad, x, y, r, sx * ScaleX, sy * ScaleY, ox, oy)
     love.graphics.setColor(1,1,1,1)
   end
 end
 function LevelManager:drawObjectForm(Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
-
+  -- Aucune donnée à afficher
 end
 
 function LevelManager:drawObject(Object, OffsetX, OffsetY, ScaleX, ScaleY)
@@ -281,6 +279,13 @@ function LevelManager:Draw(OffsetX, OffsetY, ScaleX, ScaleY)
     self.oldScaleY = ScaleY
     self.updatecanvas = true
   end
+  if ScaleX ~= 1 and ScaleY ~= 1 then
+    local drawWidth = self.file.width * self.file.tilewidth * ScaleX
+    local drawHeight = self.file.height * self.file.tileheight * ScaleY
+    if drawWidth ~= self.canvas:getWidth() or drawHeight ~= self.canvas:getHeight() then
+      self.canvas = love.graphics.newCanvas(drawWidth, drawHeight)
+    end
+  end
   if self.updatecanvas then
     love.graphics.setCanvas(self.canvas)
     love.graphics.clear()
@@ -295,8 +300,7 @@ function LevelManager:Draw(OffsetX, OffsetY, ScaleX, ScaleY)
     end
     -- Affichage des objets
     for i = 1, #self.objects do
-      local object = self.objects[i]
-      self:drawObject(object, 0, 0, ScaleX, ScaleY)
+      self:drawObject(self.objects[i], 0, 0, ScaleX, ScaleY)
     end
     love.graphics.setCanvas()
   end
