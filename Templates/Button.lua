@@ -135,7 +135,7 @@ function Button:ToString(NoTitle)
   end
   return str
 end
-Button.__tostring = function(NoTitle) return Button:ToString(NoTitle) end
+Button.__tostring = function(Button, NoTitle) return Button:ToString(NoTitle) end
 Button.__call = function() return Button.New() end
 Button.__index = Button
 return Button

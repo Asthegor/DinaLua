@@ -133,6 +133,6 @@ function InputText:ToString(NoTitle)
   end
   return str
 end
-InputText.__tostring = function(NoTitle) return InputText:ToString(NoTitle) end
+InputText.__tostring = function(InputText, NoTitle) return InputText:ToString(NoTitle) end
 InputText.__index = InputText
 return InputText

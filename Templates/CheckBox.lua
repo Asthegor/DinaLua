@@ -109,6 +109,6 @@ function CheckBox:ToString(NoTitle)
   end
   return str
 end
-CheckBox.__tostring = function(NoTitle) return CheckBox:ToString(NoTitle) end
+CheckBox.__tostring = function(CheckBox, NoTitle) return CheckBox:ToString(NoTitle) end
 CheckBox.__index = CheckBox
 return CheckBox

@@ -315,7 +315,7 @@ function Image:ToString(NoTitle)
   end
   return str
 end
-Image.__tostring = function(NoTitle) return Image:ToString(NoTitle) end
+Image.__tostring = function(Image, NoTitle) return Image:ToString(NoTitle) end
 Image.__call = function() return Image.New() end
 Image.__index = Image
 return Image

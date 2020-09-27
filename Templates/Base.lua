@@ -120,6 +120,6 @@ function Base:ToString(NoTitle)
   end
   return str
 end
-Base.__tostring = function(NoTitle) return Base:ToString(NoTitle) end
+Base.__tostring = function(Base, NoTitle) return Base:ToString(NoTitle) end
 Base.__index = Base
 return Base

@@ -127,7 +127,7 @@ function Group:ToString(NoTitle)
   end
   return str
 end
-Group.__tostring = function(NoTitle) return Group:ToString(NoTitle) end
+Group.__tostring = function(Group, NoTitle) return Group:ToString(NoTitle) end
 Group.__call = function() return Group.New() end
 Group.__index = Group
 return Group

@@ -242,7 +242,7 @@ function Panel:ToString(NoTitle)
   end
   return str
 end
-Panel.__tostring = function(NoTitle) return Panel:ToString(NoTitle) end
+Panel.__tostring = function(Panel, NoTitle) return Panel:ToString(NoTitle) end
 Panel.__call = function() return Panel.New() end
 Panel.__index = Panel
 return Panel

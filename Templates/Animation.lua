@@ -118,7 +118,7 @@ function Animation:ToString(NoTitle)
   end
   return str
 end
-Animation.__tostring = function(NoTitle) return Animation:ToString(NoTitle) end
+Animation.__tostring = function(Animation, NoTitle) return Animation:ToString(NoTitle) end
 Animation.__call = function() return Animation.New() end
 Animation.__index = Animation
 return Animation

@@ -198,7 +198,7 @@ function Slider:ToString(NoTitle)
   end
   return str
 end
-Slider.__tostring = function(NoTitle) return Slider:ToString(NoTitle) end
+Slider.__tostring = function(Slider, NoTitle) return Slider:ToString(NoTitle) end
 Slider.__call = function() return Slider.new() end
 Slider.__index = Slider
 return Slider

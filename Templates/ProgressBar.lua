@@ -104,5 +104,22 @@ function ProgressBar:UpdateProgressBar(dt)
   end
 end
 
+function ProgressBar:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  str = str .. Parent:ToString(true)
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+ProgressBar.__tostring = function(ProgressBar, NoTitle) return ProgressBar:ToString(NoTitle) end
 ProgressBar.__index = ProgressBar
 return ProgressBar

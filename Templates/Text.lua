@@ -333,7 +333,7 @@ function Text:ToString(NoTitle)
   end
   return str
 end
-Text.__tostring = function(NoTitle) return Text:ToString(NoTitle) end
+Text.__tostring = function(Text, NoTitle) return Text:ToString(NoTitle) end
 Text.__call = function() return Text.New() end
 Text.__index = Text
 return Text

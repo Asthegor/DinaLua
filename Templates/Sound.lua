@@ -1,6 +1,6 @@
 local Sound = {
-  _VERSION     = 'Dina GE Sound Template v1.3',
-  _DESCRIPTION = 'Sound Template in Dina Game Engine',
+  _TITLE       = 'Dina GE Sound',
+  _VERSION     = '2.0.4',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/sound/',
   _LICENSE     = [[
     ZLIB Licence
@@ -169,5 +169,21 @@ function Sound:Update(dt)
   end
 end
 
+function Sound:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+Sound.__tostring = function(Sound, NoTitle) return Sound:ToString(NoTitle) end
 Sound.__index = Sound
 return Sound
