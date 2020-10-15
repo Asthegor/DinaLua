@@ -1,39 +1,37 @@
 local Slider = {
   _TITLE       = 'Dina GE Slider',
-  _VERSION     = '2.0.3',
+  _VERSION     = '2.0.4',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/slider/',
   _LICENSE     = [[
-    ZLIB Licence
-
-    Copyright (c) 2020 LACOMBE Dominique
-
-    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-        3. This notice may not be removed or altered from any source distribution.
+Copyright (c) 2020 LACOMBE Dominique
+ZLIB Licence
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
   ]]
 }
-
--- Déclaration du parent
+-- MANDATORY ELEMENTS
 local CurrentFile = (...):gsub("^(.*/+)", "")
 local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 local Parent = require(CurrentFolder.."/Panel")
 setmetatable(Slider, {__index = Parent})
+-- Mandatory components
 local Button = require(CurrentFolder.."/Button")
 
 
 --[[
 proto const Slider.New(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, Orientation, Z)
-.D This function creates a new Text object.
+.D This function creates a new Slider object.
 .P X
-Position on the X axis of the text.
+Position on the X axis of the slider.
 .P Y
-Position on the Y axis of the text.
+Position on the Y axis of the slider.
 .P Width
-Width of the space occupied by the text.
+Width of the space occupied by the slider.
 .P Height
-Haight of the space occupied by the text.
+Height of the space occupied by the slider.
 .P Value
 Current value of the slider.
 .P Max
@@ -84,6 +82,10 @@ function Slider.New(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, O
   return self
 end
 
+--[[
+proto Slider:ChangeCursorPosition()
+.D This function change the position of the cursor on the slider based on its value.
+]]--
 function Slider:ChangeCursorPosition()
   local cursorx, cursory
   if self.orientation == "vertical" then
@@ -96,26 +98,42 @@ function Slider:ChangeCursorPosition()
   self.cursor:SetPosition(cursorx, cursory)
 end
 
+--[[
+proto Slider:Draw()
+.D This function draw the slider if defined as visible.
+]]--
 function Slider:Draw()
   if self.visible then
-    self:DrawSlider()
+    love.graphics.setColor(self.slidercolor)
+    love.graphics.rectangle("fill", self.xs, self.ys, self.ws, self.hs)
+    love.graphics.setColor(1,1,1,1)
+    self.cursor:Draw()
+    love.graphics.setColor(1,1,1,1)
   end
 end
 
-function Slider:DrawSlider()
-  love.graphics.setColor(self.slidercolor)
-  love.graphics.rectangle("fill", self.xs, self.ys, self.ws, self.hs)
-  love.graphics.setColor(1,1,1,1)
-  self.cursor:Draw()
-  love.graphics.setColor(1,1,1,1)
-end
-
+--[[
+proto Slider:SetColors(SliderColor, BorderCursorColor, BackCursorColor)
+.D This function sets the colors for the slider and the cursor.
+.P SliderColor
+Color of the slider
+.P BorderCursorColor
+Color of the border of the cursor.
+.P BackCursorColor
+Color of the back of the cursor.
+]]--
 function Slider:SetColors(SliderColor, BorderCursorColor, BackCursorColor)
   self.slidercolor = SliderColor
   self.cursor:SetBorderColor(BorderCursorColor)
   self.cursor:SetBackColor(BackCursorColor)
 end
 
+--[[
+proto Slider:SetPosition(X, Y)
+.D This function define the new position of the slider.
+.P X
+.P Y
+]]--
 function Slider:SetPosition(X, Y)
   self.x = X
   self.y = Y
@@ -129,59 +147,97 @@ function Slider:SetPosition(X, Y)
   self:ChangeCursorPosition()
 end
 
-
+--[[
+proto Slider:GetMaxValue()
+.D This function returns the maximum value of the slider.
+.R Maximum value of the slider.
+]]--
 function Slider:GetMaxValue()
   return self.max
 end
 
+--[[
+proto Slider:GetValue()
+.D This function returns the current value of the slider.
+.R Value of the slider.
+]]--
 function Slider:GetValue()
   return self.value
 end
 
-function Slider:SetMaxValue(pMax)
-  self.max = pMax
+--[[
+proto Slider:SetMaxValue(Max)
+.D This function defines the maximum value of the slider (greater or equal to 1) and change the value of the steps and the position of the cursor. The current value is updated regards of the given maximum value.
+.P Max
+Maximum value to set.
+]]--
+function Slider:SetMaxValue(Max)
+  if Max < 1 then Max = 1 end
+  self.max = Max
+  if self.max > self.value then
+    self:SetValue(self.max)
+  end
+  if self.orientation == "vertical" then
+    self.step = (self.height - self.thin/2) / Max
+  else
+    self.step = (self.width - self.thin/2) / Max
+  end
+  self:ChangeCursorPosition()
 end
 
-function Slider:SetValue(pValue)
-  if pValue >= 0 and pValue <= self.max then
-    self.value = pValue
+--[[
+proto Slider:SetValue(Value)
+.D This function set the current value of the slider and change the position of the cursor.
+.P Value
+Value to set.
+]]--
+function Slider:SetValue(Value)
+  if Value >= 0 and Value <= self.max then
+    self.value = Value
     self:ChangeCursorPosition()
   end
 end
 
-
+--[[
+proto Slider:Update(dt)
+.D This function update the cursor position when the mouse dragged it.
+.P dt
+Delta time.
+]]--
 function Slider:Update(dt)
   if self.visible then
-    self:UpdateSlider(dt)
-  end
-end
-
-function Slider:UpdateSlider(dt)
-  self:UpdatePanel(dt)
-  self.cursor:Update(dt)
-  if self.cursor.pressed and love.mouse.isDown(1) then
-    if self.orientation == "vertical" then
-      local my = love.mouse.getY()
-      if my < self.cursor.y then
-        local newval = math.floor((self.cursor.y-my) / self.step)
-        self:SetValue(self.value - newval)
-      elseif my > self.cursor.y+self.cursor.height then
-        local newval = math.floor((my-self.cursor.y-self.cursor.height) / self.step)
-        self:SetValue(self.value + newval)
-      end
-    else
-      local mx = love.mouse.getX()
-      if mx < self.cursor.x then
-        local newval = math.floor((self.cursor.x-mx) / self.step)
-        self:SetValue(self.value - newval)
-      elseif mx > self.cursor.x+self.cursor.width then
-        local newval = math.floor((mx-self.cursor.x-self.cursor.width) / self.step)
-        self:SetValue(self.value + newval)
+    self:UpdatePanel(dt)
+    self.cursor:Update(dt)
+    if self.cursor.pressed and love.mouse.isDown(1) then
+      if self.orientation == "vertical" then
+        local my = love.mouse.getY()
+        if my < self.cursor.y then
+          local newval = math.floor((self.cursor.y-my) / self.step)
+          self:SetValue(self.value - newval)
+        elseif my > self.cursor.y+self.cursor.height then
+          local newval = math.floor((my-self.cursor.y-self.cursor.height) / self.step)
+          self:SetValue(self.value + newval)
+        end
+      else
+        local mx = love.mouse.getX()
+        if mx < self.cursor.x then
+          local newval = math.floor((self.cursor.x-mx) / self.step)
+          self:SetValue(self.value - newval)
+        elseif mx > self.cursor.x+self.cursor.width then
+          local newval = math.floor((mx-self.cursor.x-self.cursor.width) / self.step)
+          self:SetValue(self.value + newval)
+        end
       end
     end
   end
 end
 
+--[[
+proto Slider:ToString(NoTitle)
+.D This function display all variables containing in the current Slider instance (tables and functions are excluded).
+.P NoTitle
+Indicates if the title must be displayed (false) or not (true).
+]]--
 function Slider:ToString(NoTitle)
   local str = ""
   if not NoTitle then
@@ -198,7 +254,8 @@ function Slider:ToString(NoTitle)
   end
   return str
 end
+
+-- System functions
 Slider.__tostring = function(Slider, NoTitle) return Slider:ToString(NoTitle) end
-Slider.__call = function() return Slider.new() end
 Slider.__index = Slider
 return Slider

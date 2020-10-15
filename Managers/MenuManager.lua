@@ -1,6 +1,6 @@
 local MenuManager = {
   _TITLE       = 'Dina GE Menu Manager',
-  _VERSION     = '2.0.3',
+  _VERSION     = '2.0.4',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/menumanager/',
   _LICENSE     = [[
     ZLIB Licence
@@ -28,21 +28,19 @@ function MenuManager.New()
 end
 
 --[[
-proto MenuManager:AddComponent(ComponentName, ComponentType, Args...)
+proto MenuManager:Add(ComponentType, Args...)
 .D This function add a new component, defined by its given name, to the menu. Cannot add a MenuManager to the components
-.P ComponentName
-Name of the component to add to the menu.
 .P ComponentType
 Type of the component to add to the menu. Cannot be "MenuManager".
 .P Args...
 Other arguments needed to create the component.
 .R Returns a new instance of the component.
 ]]--
-function MenuManager:AddComponent(ComponentName, ComponentType, ...)
+function MenuManager:Add(ComponentType, ...)
   if not self.components then
     self.components = {}
   end
-  local component = self.GameEngine.CreateComponent(ComponentName, ComponentType, ...)
+  local component = self.GameEngine(ComponentType, ...)
   table.insert(self.components, component)
   return component
 end
@@ -53,7 +51,7 @@ proto MenuManager.CallbackZOrder()
 ]]--
 function MenuManager:CallbackZOrder()
   local calculate = false
-  for key, component in pairs(self.components) do
+  for _, component in pairs(self.components) do
     if component.IsZOrderChanged then
       if component:IsZOrderChanged() == true then
         calculate = true
@@ -99,17 +97,6 @@ function MenuManager:Draw()
 end
 
 --[[
-proto MenuManager:GetComponentByName(Name)
-.D This function retreive a component by its name.
-.P Name
-Name of the component
-.R Returns the component if found; nil otherwise.
-]]--
-function MenuManager:GetComponentByName(Name)
-  return self.components[Name]
-end
-
---[[
 proto MenuManager:StopSounds()
 .D This function stop all sounds.
 ]]--
@@ -151,7 +138,7 @@ function MenuManager:ToString(NoTitle)
   end
   return str
 end
+-- System functions
 MenuManager.__tostring = function(NoTitle) return MenuManager:ToString(NoTitle) end
-MenuManager.__call = function() return MenuManager.New() end
 MenuManager.__index = MenuManager
 return MenuManager

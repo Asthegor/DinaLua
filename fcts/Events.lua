@@ -1,7 +1,7 @@
-local Fct_Collision = {
-  _VERSION     = '1.2',
-  _TITLE       = 'Dina GE Collision Functions',
-  _URL         = 'https://dina.lacombedominique.com/documentation/functions/collisions/',
+local Event_Fcts = {
+  _TITLE       = 'Dina GE Event Functions',
+  _VERSION     = '2.0.4',
+  _URL         = 'https://dina.lacombedominique.com/documentation/functions/events/',
   _LICENSE     = [[
     ZLIB Licence
 
@@ -15,24 +15,23 @@ local Fct_Collision = {
   ]]
 }
 
+-- List of all possible events
+local Events = {
+  "hover",
+  "pressed",
+}
+
 --[[
-proto CollideAABB(XA, YA, XB, YB, Width, Height)
-.D This function checks if a point is in a given rectangle.
-.P XA
-Coordonnates on the X-axis of the point.
-.P YA
-Coordonnates on the Y-axis of the point.
-.P XB
-Coordonnates on the X-axis of the upper-left corner of the rectangle.
-.P YB
-Coordonnates on the Y-axis of the upper-left corner of the rectangle.
-.P Width
-Width of the rectangle.
-.P Height
-Height of the rectangle
-.R True if the point is inside of the given rectangle; false otherwise.
+proto IsEventValid(EventName)
+.D This function checks if the given event name is valid.
+.R True if the given event name is valid; false otherwise.
 ]]--
-function CollideAABB(XA, YA, XB, YB, WidthB, HeightB)
-  return XA >= XB and XA <= XB + WidthB and
-         YA >= YB and YA <= YB + HeightB
+function IsEventValid(EventName)
+  for _,v in pairs(Events) do
+    if v == EventName then
+      return true
+    end
+  end
+  return false
 end
+

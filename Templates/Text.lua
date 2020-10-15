@@ -1,29 +1,28 @@
 local Text = {
   _TITLE       = 'Dina GE Text',
-  _VERSION     = '2.0.3',
+  _VERSION     = '2.0.4',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/text/',
   _LICENSE     = [[
-    ZLIB Licence
-
-    Copyright (c) 2020 LACOMBE Dominique
-
-    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-        3. This notice may not be removed or altered from any source distribution.
+Copyright (c) 2020 LACOMBE Dominique
+ZLIB Licence
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
   ]]
 }
-
--- Déclaration du parent
+-- Declaration of the parent
 local CurrentFile = (...):gsub("^(.*/+)", "")
 local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 local Parent = require(CurrentFolder.."/Panel")
 setmetatable(Text, {__index = Parent})
 
 --[[
-proto const Text.New(Content, X, Y, Width, Height, Color, FontName, FontSize, WaitTime, DisplayTime, NbLoop)
+proto const Text.New(Content, X, Y, Width, Height, Color, FontName, FontSize, HAlign, VAlign, Z, WaitTime, DisplayTime, NbLoop)
 .D This function creates a new Text object.
+.P Content
+Content of the text.
 .P X
 Position on the X axis of the text.
 .P Y
@@ -31,15 +30,19 @@ Position on the Y axis of the text.
 .P Width
 Width of the space occupied by the text.
 .P Height
-Haight of the space occupied by the text.
-.P Content
-Content of the text.
+Height of the space occupied by the text.
 .P TextColor
 Color of the text.
 .P FontName
 Name and path of the font file.
 .P FontSize
 Size of the text.
+.P HAlign
+Horizontal alignment.
+.P VAlign
+Vertical alignment.
+.P Z
+Z-Order of the text.
 .P WaitTime
 Duration before displaying the text.
 .P DisplayTime
@@ -51,6 +54,9 @@ Number of time the text will be shown (all durations will also be repeat).
 function Text.New(Content, X, Y, Width, Height, TextColor, FontName, FontSize, HAlign, VAlign, Z, WaitTime, DisplayTime, NbLoop)
   local self = setmetatable(Parent.New(X, Y, Width, Height, Z), Text)
   self:SetContent(Content)
+  if (self.width == 0 and Width == nil) or (self.height == 0 and Height == nil) then
+    self.width, self.height = self:GetTextDimensions()
+  end
   self:SetTextColor(TextColor)
   self:SetFont(FontName, FontSize)
   self:SetAlignments(HAlign, VAlign)
@@ -62,35 +68,28 @@ end
 
 --[[
 proto Text:Draw()
-.D This function launches the DrawText function if the text is define as visible.
+.D This function draw the text with its color and font. The text is aligned horizontally and vertically inside the width and height defined during its creation (by default, upper left).
 ]]--
 function Text:Draw()
   if self.visible then
-    self:DrawText()
-  end
-end
---[[
-proto Text:DrawText()
-.D This function draw the text with its color, font. The text is aligned horizontally and vertically inside the width and height defined during its creation.
-]]--
-function Text:DrawText()
-  if self.isVisible then
-    local oldFont = love.graphics.getFont()
-    love.graphics.setColor(self.textcolor)
-    love.graphics.setFont(self.font)
-    local x = self.x
-    local y = self.y
-    if self.valign == "center" then
-      y = y + (self.height - self:GetTextHeight()) / 2
-    elseif self.valign == "bottom" then
-      y = y + self.height - self:GetTextHeight()
+    if self.isVisible then
+      local oldFont = love.graphics.getFont()
+      love.graphics.setColor(self.textcolor)
+      love.graphics.setFont(self.font)
+      local x = self.x
+      local y = self.y
+      if self.valign == "center" then
+        y = y + (self.height - self:GetTextHeight()) / 2
+      elseif self.valign == "bottom" then
+        y = y + self.height - self:GetTextHeight()
+      end
+      if self.backcolor then
+        self:DrawPanel()
+      end
+      love.graphics.printf(self.content, x, y, self.width, self.halign)
+      love.graphics.setFont(oldFont)
+      love.graphics.setColor(1,1,1,1)
     end
-    if self.backcolor then
-      self:DrawPanel()
-    end
-    love.graphics.printf(self.content, x, y, self.width, self.halign)
-    love.graphics.setFont(oldFont)
-    love.graphics.setColor(1,1,1,1)
   end
 end
 
@@ -168,10 +167,21 @@ function Text:SetFontSize(Size)
 end
 
 --*************************************************************
+--[[
+proto Text:GetTextColor()
+.D This function returns the color of the text.
+.R Color of the text
+]]--
 function Text:GetTextColor()
   return self.textcolor
 end
 
+--[[
+proto Text:SetTextColor(Color)
+.D This function change the color of the text with the given color.
+.P Color
+New color of the text.
+]]--
 function Text:SetTextColor(Color)
   if not IsColorValid(Color) then
     Color = Colors.WHITE
@@ -194,8 +204,8 @@ end
 
 --[[
 proto Text:GetTextWidth()
-.D This function returns the width of the text
-.R Width of the text
+.D This function returns the width of the text.
+.R Width of the text.
 ]]--
 function Text:GetTextWidth()
   if not self.content then
@@ -214,10 +224,23 @@ function Text:GetTextDimensions()
   return self:GetTextWidth(), self:GetTextHeight()
 end
 
+--[[
+proto Text:GetAlignments()
+.D This function returns the alignments of the text.
+.R Horizontal and vertical alignments of the text.
+]]--
 function Text:GetAlignments()
   return self.halign, self.valign
 end
 
+--[[
+proto Text:SetAlignments(HAlign, VAlign)
+.D This function defines the horizontal and vertical alignments of the text.
+.P HAlign
+Horizontal alignment of the text. Can be "left", "center" or "right".
+.p VAlign
+Vertical alignment of the text. Can be "up", "center" or "bottom.
+]]--
 function Text:SetAlignments(HAlign, VAlign)
   HAlign = string.lower(HAlign or "")
   if HAlign ~= "left" and HAlign ~= "center" and HAlign ~= "right" then
@@ -230,6 +253,7 @@ function Text:SetAlignments(HAlign, VAlign)
   end
   self.valign = VAlign
 end
+
 --[[
 proto Text:ResetTimers()
 .D This function sets the timers to -1 for the display time, 0 for the waiting time ans -1 for the number of loops. Those values display the text without any effect.
@@ -265,25 +289,15 @@ end
 
 --[[
 proto Text:Update(dt)
-.D This funtion launches all updates needed for the current text
+.D This funtion launches all updates needed for the current text.
 .P dt
 Delta time.
 ]]--
 function Text:Update(dt)
-  self:UpdateVisibility(dt)
-end
-
---[[
-proto Text:UpdateVisibility(dt)
-.D This funtion defines if and when the text should be displayed based on the number of loops reminded and the duration before and for displaying the text.
-.P dt
-Delta time.
-]]--
-function Text:UpdateVisibility(dt)
-  self.isVisible = false
   if self.nbloop == 0 then
     return
   end
+  self.isVisible = false
   if self.waitTime <= 0 and self.displayTime < 0 then
     self.isVisible = true
     return
@@ -294,11 +308,11 @@ function Text:UpdateVisibility(dt)
       self.isVisible = false
       if self.nbloop > 0 then
         self.nbloop = self.nbloop - 1
-      end --self.nbloop > 0
+      end
       self.timerWait = self.waitTime
       self.timerDisplay = self.displayTime
-    end --self.timerDisplay < 0
-  else --self.waitTime > 0
+    end
+  else
     self.timerWait = self.timerWait - dt
     if self.timerWait < 0 then
       self.isVisible = true
@@ -308,15 +322,21 @@ function Text:UpdateVisibility(dt)
           self.isVisible = false
           if self.nbloop > 0 then
             self.nbloop = self.nbloop - 1
-          end --self.nbloop > 0
+          end
           self.timerWait = self.waitTime
           self.timerDisplay = self.displayTime
-        end --self.timerDisplay < 0
-      end --self.displayTime >= 0
-    end --self.timerWait < 0
-  end --self.waitTime <= 0 and self.displayTime < 0
+        end
+      end
+    end
+  end
 end
 
+--[[
+proto Text:ToString(NoTitle)
+.D This function display all variables containing in the current Text instance (tables and functions are excluded).
+.P NoTitle
+Indicates if the title must be displayed (false) or not (true).
+]]--
 function Text:ToString(NoTitle)
   local str = ""
   if not NoTitle then
@@ -333,7 +353,8 @@ function Text:ToString(NoTitle)
   end
   return str
 end
+
+-- System functions
 Text.__tostring = function(Text, NoTitle) return Text:ToString(NoTitle) end
-Text.__call = function() return Text.New() end
 Text.__index = Text
 return Text

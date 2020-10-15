@@ -1,18 +1,16 @@
 local LevelManager = {
   _TITLE       = 'Dina GE Level Manager',
-  _VERSION     = '2.0.3',
+  _VERSION     = '2.0.4',
   _URL         = 'https://dina.lacombedominique.com/documentation/managers/levelmanager/',
   _LICENSE     = [[
-    ZLIB Licence
-
-    Copyright (c) 2019 LACOMBE Dominique
-
-    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-        3. This notice may not be removed or altered from any source distribution.
-  ]]
+Copyright (c) 2019 LACOMBE Dominique
+ZLIB Licence
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+]]
 }
 
 function LevelManager.New()
@@ -126,6 +124,12 @@ function LevelManager:loadLayer(Layer)
     self:loadObjects(Layer)
   end
 end
+--[[
+proto LevelManager:Load(File)
+.D This function loads a map file.
+.P File
+Path and name of the map to load.
+]]--
 function LevelManager:Load(File)
   self.file = require(File)
   local fname = File:gsub("^(.*/+)", "")
@@ -258,7 +262,14 @@ function LevelManager:drawObject(Object, OffsetX, OffsetY, ScaleX, ScaleY)
     self:drawObjectForm(Object, OffsetX, OffsetY, Object.opacity, ScaleX, ScaleY)
   end
 end
---
+--[[
+proto LevelManager:Draw(OffsetX, OffsetY, ScaleX, ScaleY)
+.D This function draws the map with a given offset and scale.
+.P OffsetX
+.P OffsetY
+.P ScaleX
+.P ScaleY
+]]--
 function LevelManager:Draw(OffsetX, OffsetY, ScaleX, ScaleY)
   OffsetX = OffsetX or 0
   OffsetY = OffsetY or 0
@@ -645,6 +656,7 @@ function LevelManager:ToString(NoTitle)
   end
   return str
 end
+-- System functions
 LevelManager.__tostring = function(NoTitle) return LevelManager:ToString(NoTitle) end
 LevelManager.__index = LevelManager
 return LevelManager

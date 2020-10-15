@@ -1,6 +1,6 @@
-local Fct_Tables = {
-  _VERSION     = '2.0.3',
+local Table_Fcts = {
   _TITLE       = 'Dina GE Table Functions',
+  _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/functions/tables/',
   _LICENSE     = [[
     ZLIB Licence
@@ -23,7 +23,12 @@ proto SortTableByZOrder(Table)
 Table to sort by the Z-Order.
 ]]--
 function SortTableByZOrder(Table)
-  table.sort(Table, function(a,b) return ((a.GetZOrder and a:GetZOrder()) or 0) < ((b.GetZOrder and b:GetZOrder()) or 0) end)
+  table.sort(Table, 
+             function(a,b)
+               a.zorderchanged = false
+               b.zorderchanged = false
+               return ((a.GetZOrder and a:GetZOrder()) or 0) < ((b.GetZOrder and b:GetZOrder()) or 0)
+             end)
 end
 
 --[[

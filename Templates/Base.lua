@@ -3,16 +3,14 @@ local Base = {
   _VERSION     = '2.0.3',
   _URL         = 'https://dina.lacombedominique.com/documentation/templates/base/',
   _LICENSE     = [[
-    ZLIB Licence
-
-    Copyright (c) 2020 LACOMBE Dominique
-
-    This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
-    Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
-        1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
-        2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
-        3. This notice may not be removed or altered from any source distribution.
-  ]]
+Copyright (c) 2020 LACOMBE Dominique
+ZLIB Licence
+This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
+Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
+    1. The origin of this software must not be misrepresented; you must not claim that you wrote the original software. If you use this software in a product, an acknowledgment in the product documentation would be appreciated but is not required.
+    2. Altered source versions must be plainly marked as such, and must not be misrepresented as being the original software.
+    3. This notice may not be removed or altered from any source distribution.
+]]
 }
 
 --[[
@@ -31,20 +29,6 @@ function Base.New(X, Y)
   return self
 end
 
---*************************************************************
-
---[[
-proto Base:ChangePosition(X, Y)
-.D This function change the position on the X and Y axis of the base element.
-.P X
-Add this value to the X axis position.
-.P Y
-Add this value to the Y axis position.
-]]--
-function Base:ChangePosition(X, Y)
-  self.x = self.x + X
-  self.y = self.y + Y
-end
 --[[
 proto Base:GetPosition()
 .D This function returns the current position of the base element.
@@ -90,21 +74,26 @@ end
 --*************************************************************
 
 --[[
-proto const Base:Draw()
+proto Base:Draw()
 .D This function indicates only if a Draw function has not been implemented for an element using this base element.
 ]]--
 function Base:Draw()
   print("Base - Draw : Not implemented") 
 end
 --[[
-proto const Base:Update()
+proto Base:Update()
 .D This function indicates only if an Update function has not been implemented for an element using this base element.
 ]]--
 function Base:Update()
   print("Base - Update : Not implemented")
 end
 
--- Informations système
+--[[
+proto Base:ToString(NoTitle)
+.D This function display all variables containing in the current Base instance (tables and functions are excluded).
+.P NoTitle
+Indicates if the title must be displayed (false) or not (true).
+]]--
 function Base:ToString(NoTitle)
   local str = ""
   if not NoTitle then
@@ -120,6 +109,8 @@ function Base:ToString(NoTitle)
   end
   return str
 end
+
+-- System functions
 Base.__tostring = function(Base, NoTitle) return Base:ToString(NoTitle) end
 Base.__index = Base
 return Base
