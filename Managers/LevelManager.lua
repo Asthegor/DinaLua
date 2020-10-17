@@ -126,7 +126,7 @@ function LevelManager:loadLayer(Layer)
 end
 --[[
 proto LevelManager:Load(File)
-.D This function loads a map file.
+.D This function loads a given map file.
 .P File
 Path and name of the map to load.
 ]]--
@@ -151,6 +151,50 @@ end
 --*************************************************************
 --* Drawings
 --*************************************************************
+-- Internal function
+local function GetRotation(pNum)
+  local FLIPH = 0x80000000
+  local FLIPV = 0x40000000
+  local FLIPD = 0x20000000
+  local numTile = pNum
+  local r, sx, sy = 0, 1, 1
+  local flipX, flipY, flipD = false, false, false
+  if numTile > FLIPH then
+    numTile = numTile - FLIPH
+    flipX = true
+  end
+  if numTile > FLIPV then
+    numTile = numTile - FLIPV
+    flipY = true
+  end
+  if numTile > FLIPD then
+    numTile = numTile - FLIPD
+    flipD = true
+  end
+  if flipX then
+    if flipY and flipD then
+      r  = math.rad(-90)
+      sy = -1
+    elseif flipY then
+      sx = -1
+      sy = -1
+    elseif flipD then
+      r = math.rad(90)
+    else
+      sx = -1
+    end
+  elseif flipY then
+    if flipD then
+      r = math.rad(-90)
+    else
+      sy = -1
+    end
+  elseif flipD then
+    r  = math.rad(90)
+    sy = -1
+  end
+  return numTile, r, sx, sy
+end
 function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
   if not self:isDrawable(Layer) then
     return
@@ -167,7 +211,7 @@ function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
       local posTile = (row - 1) * Layer.width + col
       local data = Layer.data[posTile]
       if data ~= nil and data ~= 0 then
-        local numTile, r, sx, sy = LevelManager:getRotation(data)
+        local numTile, r, sx, sy = GetRotation(data)
         local numimg = self.squads[numTile].numimg
         local image = self.images[numimg]
         local quad = self.squads[numTile].obj
@@ -178,18 +222,18 @@ function LevelManager:drawLayer(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
         x = (col-1) * tw * ScaleX
         y = (row-1) * th * ScaleY
         if r > 0 then
-          -- rotation 90° vers la droite
+          -- rotation  90° on the right
           ox = ox + qw - tw
           oy = oy + qh
         elseif r < 0 then
-          -- rotation de 270° vers la droite
+          -- rotation 270° on the right
           ox = ox + tw
         elseif sx < 0 and sy < 0 then
---          rotation de 180° vers la droite
+          -- rotation 180° on the right
           ox = ox + qw
           oy = oy + th
         else
-          -- aucune modification
+          -- no rotation
           oy = oy + math.abs(diffh) > 0 and diffh or 0
         end
         love.graphics.draw(image, quad, x+offsetX, y+offsetY, r, sx*ScaleX, sy*ScaleY, ox, oy)
@@ -205,8 +249,7 @@ function LevelManager:drawImage(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
   local x = (Layer.offsetx - OffsetX) * ScaleX
   local y = (Layer.offsety - OffsetY) * ScaleY
 
-  -- Traitement de la rotation
-  --      S'inspirer de drawObjectTile ?
+  -- TODO: rotation ?
 
   love.graphics.setColor(1,1,1,Layer.opacity)
   local image = self.images[Layer.numImg]
@@ -214,7 +257,7 @@ function LevelManager:drawImage(Layer, OffsetX, OffsetY, ScaleX, ScaleY)
   love.graphics.setColor(1,1,1,1)
 end
 function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
-  local numTile, r, sx, sy = LevelManager:getRotation(Object.gid)
+  local numTile, r, sx, sy = GetRotation(Object.gid)
   if numTile > 0 then
     local numimg = self.squads[numTile].numimg
     local image = self.images[numimg]
@@ -249,9 +292,8 @@ function LevelManager:drawObjectTile(Object, OffsetX, OffsetY, Alpha, ScaleX, Sc
   end
 end
 function LevelManager:drawObjectForm(Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
-  -- Aucune donnée à afficher
+  -- Nothing to draw
 end
-
 function LevelManager:drawObject(Object, OffsetX, OffsetY, ScaleX, ScaleY)
   if not self:isDrawable(Object) then
     return
@@ -322,54 +364,25 @@ end
 --*************************************************************
 --* Opacity
 --*************************************************************
-function LevelManager:getLayerOpacity(Layer)
-  return Layer.opacity or 0
+--[[
+proto LevelManager:getItemOpacity(Item)
+.D This function returns the opacity of a given item (layer or object).
+.P Item
+Item (layer or object) to get the opacity.
+.R Returns the opacity of the given item (layer or object).
+]]--
+function LevelManager:getItemOpacity(Item)
+  return Item.opacity or 0
 end
-function LevelManager:setLayerOpacity(Layer, Alpha)
-  if Layer ~= nil then
-    if Layer.originalOpacity == nil then
-      if Layer.originalOpacity ~= Layer.opacity then
-        self.updatecanvas = true
-      end
-      Layer.originalOpacity = Layer.opacity
-    end
-    Layer.opacity = Alpha
-    if Layer.opacity > 1 then
-      Layer.opacity = 1
-    elseif Layer.opacity < 0 then
-      Layer.opacity = 0
-    end
-  end
-end
-function LevelManager:adjustLayerOpacity(Layer, Adjust)
-  if Layer ~= nil then
-    if Layer.originalOpacity == nil then
-      if Layer.originalOpacity ~= Layer.opacity then
-        self.updatecanvas = true
-      end
-      Layer.originalOpacity = Layer.opacity
-    end
-    Layer.opacity = Layer.opacity + Adjust
-    if Layer.opacity > 1 then
-      Layer.opacity = 1
-    elseif Layer.opacity < 0 then
-      Layer.opacity = 0
-    end
-  end
-end
-function LevelManager:restoreLayerOpacity(Layer)
-  if Layer ~= nil then
-    if Layer.originalOpacity ~= nil then
-      self.updatecanvas = true
-      Layer.opacity = Layer.originalOpacity
-    end
-  end
-end
-
-function LevelManager:getObjectOpacity(Object)
-  return Object.opacity or 0
-end
-function LevelManager:setObjectOpacity(Object, Alpha)
+--[[
+proto LevelManager:setItemOpacity(Item, Alpha)
+.D This function set the opacity of the given item (layer or object).
+.P Item
+Item (layer or object) on which the opacity is modified.
+.P Alpha
+New value of opacity to apply.
+]]--
+function LevelManager:setItemOpacity(Item, Alpha)
   if Object ~= nil then
     if Object.originalOpacity == nil then
       if Object.originalOpacity ~= Object.opacity then
@@ -385,47 +398,78 @@ function LevelManager:setObjectOpacity(Object, Alpha)
     end
   end
 end
-function LevelManager:adjustObjectOpacity(Object, Adjust)
-  if Object ~= nil then
-    if Object.originalOpacity == nil then
-      if Object.originalOpacity ~= Object.opacity then
+--[[
+proto LevelManager:adjustItemOpacity(Item, Adjust)
+.D This function adjusts the opacity of a given item (layer or object) by the given adjust value.
+.P Item
+Item (layer or object) on which opacity is modified.
+.P Adjust
+Value to add to the item (layer or object) opacity.
+]]--
+function LevelManager:adjustItemOpacity(Item, Adjust)
+  if Item ~= nil then
+    if Item.originalOpacity == nil then
+      if Item.originalOpacity ~= Item.opacity then
         self.updatecanvas = true
       end
-      Object.originalOpacity = Object.opacity
+      Item.originalOpacity = Item.opacity
     end
-    Object.opacity = Object.opacity + Adjust
-    if Object.opacity > 1 then
-      Object.opacity = 1
-    elseif Object.opacity < 0 then
-      Object.opacity = 0
+    Item.opacity = Item.opacity + Adjust
+    if Item.opacity > 1 then
+      Item.opacity = 1
+    elseif Item.opacity < 0 then
+      Item.opacity = 0
     end
   end
 end
-function LevelManager:restoreObjectOpacity(Object)
-  if Object.originalOpacity ~= nil then
+--[[
+proto LevelManager:restoreItemOpacity(Item)
+.D This function restores the opacity of the given item (layer or object).
+.P Item
+Item (layer or object) on which opacity is restored.
+]]--
+function LevelManager:restoreItemOpacity(Item)
+  if Item.originalOpacity ~= nil then
     self.updatecanvas = true
-    Object.opacity = Object.originalOpacity
+    Item.opacity = Item.originalOpacity
   end
 end
-function LevelManager:setOpacity(Alpha)
+--[[
+proto LevelManager:setOpacity(Opacity)
+.D This function sets the opacity of all layers and objects to the given value.
+.P Opacity
+New value of opacity.
+]]--
+function LevelManager:setOpacity(Opacity)
   for _,v in ipairs(self.layers) do
-    self:setLayerOpacity(v, Alpha)
+    self:setItemOpacity(v, Opacity)
   end
   for _,v in ipairs(self.objects) do
-    self:setObjectOpacity(v, Alpha)
+    self:setItemOpacity(v, Opacity)
   end
 end
+--[[
+proto LevelManager:restoreOpacity()
+.D This function restores the opacity of all layers and objects.
+]]--
 function LevelManager:restoreOpacity()
   for _,v in ipairs(self.layers) do
-    self:restoreLayerOpacity(v)
+    self:restoreItemOpacity(v)
   end
   for _,v in ipairs(self.objects) do
-    self:restoreObjectOpacity(v)
+    self:restoreItemOpacity(v)
   end
 end
 --*************************************************************
 --* Retreivings
 --*************************************************************
+--[[
+proto LevelManager:getLayerByName(Name)
+.D This function returns a layer found by its name. Do not work with a name of a group.
+.P Name
+Name of the layer.
+.R Returns a layer found by its name; nil otherwise. Do not work with a name of a group.
+]]--
 function LevelManager:getLayerByName(Name)
   for i = 1, #self.layers do
     local layer = self.layers[i]
@@ -435,6 +479,13 @@ function LevelManager:getLayerByName(Name)
   end
   return nil
 end
+--[[
+proto LevelManager:getLayersByGroup(GroupName)
+.D This function returns all layers of a group found by its name.
+.P Name
+Name of a group.
+.R Returns all layers of a group found by its name.
+]]--
 function LevelManager:getLayersByGroup(GroupName)
   local layerGroup = {}
   for i = 1, #self.layers do
@@ -445,6 +496,13 @@ function LevelManager:getLayersByGroup(GroupName)
   end
   return layerGroup
 end
+--[[
+proto LevelManager:getObjectByName(Name)
+.D This function returns an object found by its name.
+.P Name
+Name of the object to find.
+.R Returns an object found by its name; nil otherwise.
+]]--
 function LevelManager:getObjectByName(Name)
   for i = 1, #self.objects do
     local object = self.objects[i]
@@ -454,6 +512,15 @@ function LevelManager:getObjectByName(Name)
   end
   return nil
 end
+--[[
+proto LevelManager:getAllObjectsBy(Type, Value)
+.D This function retreives an object according to the given type and value. If no object corresponds to the given type and value, nothing is returned.
+.P Type
+Type of the object. Can be "type" or "shape".
+.P Value
+Value of the given type.
+.R Returns all objects matching the given type and value.
+]]--
 function LevelManager:getAllObjectsBy(Type, Value)
   local objects = {}
   for i = 1, #self.objects do
@@ -464,12 +531,33 @@ function LevelManager:getAllObjectsBy(Type, Value)
   end
   return objects
 end
+--[[
+proto LevelManager:getAllObjectsByType(Type)
+.D This function is a shortcut to retreive all objects of the given type.
+.P Type
+Type of object to retreive.
+.R Returns all objects of the given type.
+]]--
 function LevelManager:getAllObjectsByType(Type)
   return self:getAllObjectsBy("type", Type)
 end
+--[[
+proto LevelManager:getAllObjectsByShape(Shape)
+.D This function is a shortcu to retreive all objects of the given shape.
+.P Shape
+Shape of object to retreive.
+.R Returns all objects of the given shape.
+]]--
 function LevelManager:getAllObjectsByShape(Shape)
   return self:getAllObjectsBy("shape", Shape)
 end
+--[[
+proto LevelManager:getObjectsInGroup(GroupName)
+.D This function returns all objects of a group retreived by the given name.
+.P GroupName
+Name of the group.
+.R Returns all objects of a group retreived by the given name.
+]]--
 function LevelManager:getObjectsInGroup(GroupName)
   local objects = {}
   for i = 1, #self.objects do
@@ -480,6 +568,15 @@ function LevelManager:getObjectsInGroup(GroupName)
   end
   return objects
 end
+--[[
+proto LevelManager:getObjectsOnGrid(Row, Col)
+.D This function returns all objects at the given cell coordonates. Row and Col should be inside the grid.
+.P Row
+Row of the cell.
+.P Col
+Column of the cell.
+.R Returns all objects at the given cell coordonates.
+]]--
 function LevelManager:getObjectsOnGrid(Row, Col)
   local objects = {}
   for i = 1, #self.objects do
@@ -490,6 +587,11 @@ function LevelManager:getObjectsOnGrid(Row, Col)
   end
   return objects
 end
+--[[
+proto LevelManager:getDimensions()
+.D This function returns the number of columns and rows of the grid and the width (in pixels) and height (in pixels) of each cell.
+.R Returns the number of columns, the number of rows of the grid, the width (in pixels) and height (in pixels) of each cell.
+]]--
 function LevelManager:getDimensions()
   return self.file.width, self.file.height, self.file.tilewidth, self.file.tileheight
 end
@@ -497,11 +599,28 @@ end
 --*************************************************************
 --* Utils
 --*************************************************************
+--[[
+proto LevelManager:getLayerTileIdAtPos(Layer, Row, Col)
+.D This function returns the tile id at the given coordonate in the given layer.
+.P Layer
+Layer to retreive the id.
+.P Row
+Row of the cell.
+.P Col
+Col of the cell.
+.R Returns the tile id at the given coordonate in the given layer.
+]]--
 function LevelManager:getLayerTileIdAtPos(Layer, Row, Col)
   local mw, _ = self:getDimensions()
   local id = Layer.data[(Row-1) * mw + Col]
   return id or 0
 end
+--[[
+proto LevelManager:backupLayerDatas(Layer)
+.D This function creates a backup of all datas for the given layer.
+.P Layer
+Layer to backup.
+]]--
 function LevelManager:backupLayerDatas(Layer)
   if type(Layer.data) ~= "table" then
     return
@@ -512,6 +631,12 @@ function LevelManager:backupLayerDatas(Layer)
     Layer.originalData[k] = v
   end
 end
+--[[
+proto LevelManager:restoreLayerDatas(Layer)
+.D This function restores all datas from the backup.
+.P Layer
+Layer to restore.
+]]--
 function LevelManager:restoreLayerDatas(Layer)
   if Layer.originalData == nil then
     return
@@ -520,27 +645,67 @@ function LevelManager:restoreLayerDatas(Layer)
     Layer.data[k] = v
   end
 end
+--[[
+proto LevelManager:changeLayerTileIdAtPos(Layer, Row, Col, ImgId, Force)
+.D This function change the tile id at the given cell coordonate on the given layer by the given id. Must be forced if the new id is 0.
+.P Layer
+Layer to modify
+.P Row
+Row of the cell.
+.P Col
+Col of the cell.
+.P ImgId
+Id of the new image inside one of the tilesets.
+.P Force
+Force the change of the id. Mandatory if the new id is 0.
+]]--
 function LevelManager:changeLayerTileIdAtPos(Layer, Row, Col, ImgId, Force)
   if Force or self:isValidImgId(ImgId) then
     local posTile = (Row - 1) * Layer.width + Col
     if Layer.originalData == nil then
       self:backupLayerDatas(Layer)
     end
-    Layer.data[posTile] = ImgId
+    if Force or self:isValidImgId(ImgId) then
+      Layer.data[posTile] = ImgId
+    end
     self.updatecanvas = true
   end
 end
+--[[
+proto LevelManager:restoreLayerTileIdAtPos(Layer, Row, Col)
+.D This function restores the tile id at the given cell coordonate on the given layer.
+.P Layer
+Layer to restore.
+.P Row
+Row of the cell.
+.P Col
+Col of the cell.
+]]--
 function LevelManager:restoreLayerTileIdAtPos(Layer, Row, Col)
   local posTile = (Row - 1) * Layer.width + Col
   Layer.data[posTile] = Layer.originalData[posTile]
   self.updatecanvas = true
 end
+--[[
+proto LevelManager:changeObjectImageId(Object, ImgId)
+.D This function change the image id of the given object by the given image id if the image id is valid.
+.P Object
+Object to change the image.
+.P ImgId
+New image id for the object.
+]]--
 function LevelManager:changeObjectImageId(Object, ImgId)
   if self:isValidImgId(ImgId) then
     Object.gid = ImgId
     self.updatecanvas = true
   end
 end
+--[[
+proto LevelManager:restoreObjectImageId(Object)
+.D This function restores the image id of the given object.
+.P Object
+Object to restore.
+]]--
 function LevelManager:restoreObjectImageId(Object)
   if Object.originalGid ~= nil then
     Object.gid = Object.originalGid
@@ -548,58 +713,35 @@ function LevelManager:restoreObjectImageId(Object)
   end
 end
 
+--[[
+proto LevelManager:isDrawable(Item)
+.D This function checks if the item is visible and its opacity is greater than 0.
+.P Item
+Item (layer or object) to check.
+.R Returns true if the item is visible and its opacity is greater than 0; false, otherwise.
+]]--
 function LevelManager:isDrawable(Item)
   return Item.visible == true and Item.opacity > 0
 end
+--[[
+proto LevelManager:isValidImgId(ImgId)
+.D This function checks if the given id is existing in the tile id list.
+.P ImgId
+Id to control.
+.R Returns true if the give id if presents in the tile id list; false, otherwise.
+]]--
 function LevelManager:isValidImgId(ImgId)
   return self.tileids[ImgId] and true or false
 end
-function LevelManager:getRotation(pNum)
-  local FLIPH = 0x80000000
-  local FLIPV = 0x40000000
-  local FLIPD = 0x20000000
-  local numTile = pNum
-  local r, sx, sy = 0, 1, 1
-  local flipX, flipY, flipD = false, false, false
-  -- Code provenant de STI
-  if numTile > FLIPH then
-    numTile = numTile - FLIPH
-    flipX = true
-  end
-  if numTile > FLIPV then
-    numTile = numTile - FLIPV
-    flipY = true
-  end
-  if numTile > FLIPD then
-    numTile = numTile - FLIPD
-    flipD = true
-  end
-  if flipX then
-    if flipY and flipD then
-      r  = math.rad(-90)
-      sy = -1
-    elseif flipY then
-      sx = -1
-      sy = -1
-    elseif flipD then
-      r = math.rad(90)
-    else
-      sx = -1
-    end
-  elseif flipY then
-    if flipD then
-      r = math.rad(-90)
-    else
-      sy = -1
-    end
-  elseif flipD then
-    r  = math.rad(90)
-    sy = -1
-  end
-  -- Fin Code provenant de STI
-  return numTile, r, sx, sy
-end
---
+--[[
+proto LevelManager:ConvertRowColToCoord(Row, Col)
+.D This function converts the given cel coordonate to X,Y coordonate.
+.P Row
+Row of the cell.
+.P Col
+Column of the cell.
+.R Returns the X,Y coordonate from the cell coordonate.
+]]--
 function LevelManager:ConvertRowColToCoord(Row, Col)
   local mw, mh, tw, th = self:getDimensions()
   if Row < 0 or Row > mh or Col < 0 and Col > mw then
@@ -609,7 +751,15 @@ function LevelManager:ConvertRowColToCoord(Row, Col)
   local y = (Row - 1) * th
   return x, y
 end
---
+--[[
+proto LevelManager:ConvertCoordAndSizeToRowCol(X, Y)
+.D This function converts a X,Y coordonate to cell coordonate.
+.P X
+Position on the X-axis.
+.P Y
+Position on the Y-axis.
+.R Returns the row and column of the cell at the given X,Y coordonate.
+]]--
 function LevelManager:ConvertCoordAndSizeToRowCol(X, Y)
   local mw, mh, tw, th = self:getDimensions()
   if X < 0 or X > mw * tw or Y < 0 or Y > mh * th then
@@ -619,7 +769,10 @@ function LevelManager:ConvertCoordAndSizeToRowCol(X, Y)
   local row = math.floor(Y / th)
   return row, col
 end
---
+--[[
+proto LevelManager:reload()
+.D This function reloads all datas of all layers and objects.
+]]--
 function LevelManager:reload()
   for _,layer in ipairs(self.layers) do
     self:restoreLayerOpacity(layer)
@@ -629,6 +782,10 @@ function LevelManager:reload()
   self.updatecanvas = true
 end
 
+--[[
+proto LevelManager:resetObjects()
+.D This function restore all objects at their original values.
+]]--
 function LevelManager:resetObjects()
   for i = 1, #self.objects do
     local object = self.objects[i]
@@ -641,6 +798,12 @@ function LevelManager:resetObjects()
   end
 end
 
+--[[
+proto LevelManager:ToString(NoTitle)
+.D This function display all variables containing in the current LevelManager instance (tables and functions are excluded).
+.P NoTitle
+Indicates if the title must be displayed (false) or not (true).
+]]--
 function LevelManager:ToString(NoTitle)
   local str = ""
   if not NoTitle then
