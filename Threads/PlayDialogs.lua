@@ -1,5 +1,5 @@
 local soc = require('socket')
-channel = {}
+local channel = {}
 channel.text = love.thread.getChannel('NewText')
 channel.speed = love.thread.getChannel('Speed')
 channel.stop = love.thread.getChannel('Stop')
