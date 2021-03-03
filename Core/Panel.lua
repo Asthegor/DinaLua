@@ -294,7 +294,7 @@ proto Panel:updatePanel(dt)
 function Panel:updatePanel(dt)
   if self.events["hover"] then
     local mx, my = love.mouse.getPosition()
-    if CollideABB(mx, my, self.x, self.y, self.width, self.height) then
+    if CollidePointRect(mx, my, self.x, self.y, self.width, self.height) then
       if not self.hover then
         self.hover = true
         self.events["hover"](self, "begin")

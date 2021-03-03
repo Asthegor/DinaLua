@@ -16,7 +16,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 function Manager.new()
   local self = {}
   local id = string.gsub(tostring(self), "table: ", "")
-  self = setmetatable(self, MenuManager)
+  self = setmetatable(self, Manager)
   self.id = id
   return self
 end
