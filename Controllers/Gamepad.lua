@@ -21,7 +21,7 @@ local function hook_love_events(self)
   function love.joystickadded(joystick)
     local jid = joystick:getID()
     self.states[jid] = {}
-    self.axereleased[jid] = {}
+    self.axebuttondown[jid] = {}
     self.joysticks[jid] = joystick
   end
   function love.joystickremoved(joystick)
@@ -32,10 +32,10 @@ local function hook_love_events(self)
   function love.gamepadaxis(joystick, axis, value)
     local jid = joystick:getID()
     self.states[jid][axis] = (value ~= 0)
-    if not self.axereleased[jid][axis] then
-      self.axereleased[jid][axis] = {}
+    local dir = ((value > 0 and 1) or (value < 0 and -1) or 0)
+    if dir == 0 then
+      self.axebuttondown[jid][axis] = false
     end
-    self.axereleased[jid][axis].direction = ((value > 0 and 1) or (value < 0 and -1) or 0)
     self.checkstate = true
   end
   function love.gamepadpressed(joystick, button)
@@ -54,7 +54,7 @@ function Gamepad.new()
   local self = setmetatable(Parent.new(), Gamepad)
   self.states = {}
   self.joysticks = {}
-  self.axereleased = {}
+  self.axebuttondown = {}
   hook_love_events(self)
   return self
 end
@@ -76,15 +76,18 @@ function Gamepad:button_down(JoystickId, Button, Direction)
     local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
     if pcall_res then
       -- Traitement des axes
-      if value ~= 0 and self.axereleased[JoystickId][Button].olddirection ~= self.axereleased[JoystickId][Button].direction then
-        self.axereleased[JoystickId][Button].olddirection = self.axereleased[JoystickId][Button].direction
-        state = self.states[JoystickId][Button]
+      if value ~= 0 and not self.axebuttondown[JoystickId][Button] then
         if state and Direction ~= 0 then
           if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
             state = false
             value = 0
+          else
+            self.axebuttondown[JoystickId][Button] = true
           end
         end --state and Direction ~= 0
+      else
+        state = false
+        value = 0
       end --value ~= 0
     end --pcall_res
     return state, value
@@ -108,8 +111,7 @@ function Gamepad:button_up(JoystickId, Button, Direction)
     local state = (self.states[JoystickId][Button] == false)
     local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
     if pcall_res then
-      if value ~= 0 and self.axereleased[JoystickId][Button].olddirection ~= self.axereleased[JoystickId][Button].direction then
-        self.axereleased[JoystickId][Button].olddirection = self.axereleased[JoystickId][Button].direction
+      if value ~= 0 then
         state = self.states[JoystickId][Button]
         if state and Direction ~= 0 then
           if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
