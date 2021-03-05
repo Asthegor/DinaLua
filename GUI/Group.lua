@@ -137,6 +137,15 @@ function Group:getDimensions()
 end
 
 --[[
+proto Group:getDimensions()
+.D This function returns the width and height of the group.
+.R Width and height of the group.
+]]--
+function Group:setDimensions(Width, Height)
+  self.width = SetDefaultNumber(Width, self.width)
+  self.height = SetDefaultNumber(Height, self.height)
+end
+--[[
 proto Group:setPosition(X, Y)
 .D This function changes the position of the group and of each of its components.
 .P X

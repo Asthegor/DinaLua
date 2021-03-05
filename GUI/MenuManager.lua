@@ -167,10 +167,13 @@ function MenuManager:addItem(Text, FontName, FontSize, OnSelection, OnDeselectio
   local itw = item:getTextDimensions()
   local ix = (Dina.width - itw)/2
   local iy = gy
-  if gh then iy = iy + gh + self.ctrlspace end
+  if gh then iy = iy + gh end
   item:setPosition(ix, iy)
 
   self.itemgroup:add(item)
+  gw, gh = self.itemgroup:getDimensions()
+  self.itemgroup:setDimensions(gw, gh + self.ctrlspace)
+
   table.insert(self.items, item)
 end
 
@@ -179,7 +182,6 @@ proto MenuManager:nextItem()
 .D Cette fonction permet de sélectionner l'item suivant du menu
 ]]--
 function MenuManager:nextItem()
-  print("MenuManager:nextItem activated")
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item.ondeselection then
@@ -199,7 +201,6 @@ function MenuManager:nextItem()
 end
 
 function MenuManager:previousItem()
-  print("MenuManager:previousItem activated")
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item.ondeselection then
