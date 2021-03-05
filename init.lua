@@ -36,6 +36,9 @@ local function CreateComponent(Dina, ComponentType, ...)
   local RComponent = Dina:require(ComponentType)
   if RComponent then
     local Component = RComponent.new(...)
+    if Dina.loadingstate then
+      table.insert(Dina.statecomponents[Dina.loadingstate], Component)
+    end
     table.insert(Dina.components, Component)
     return Component
   end
@@ -50,6 +53,7 @@ local function Initialize(self)
   self.components = {}
   self.states = {}
   self.loadfcts = {}
+  self.statecomponents = {}
 
   self.width = love.graphics.getWidth()
   self.height = love.graphics.getHeight()
@@ -151,6 +155,7 @@ Name of the function to load (by default, "load").
 ]]--
 function Dina:addState(State, File, Load)
   if not self:isValidState(State) then
+    self.statecomponents[State] = {}
     self.states[State] = require(File)
     if Load == nil or Load == "" then Load = "load" end
     local LoadFct = self.states[State][Load]
@@ -185,12 +190,20 @@ function Dina:setState(State, NoLoad)
     if self.controller then
       self.controller:dissociate()
     end
-    self.oldstate = self.state
+    if self.state ~= self.oldstate then
+      for _, component in pairs(self.statecomponents[self.state]) do
+        self:removeComponent(component)
+      end
+      self.statecomponents[self.state] = nil
+      self.oldstate = self.state
+    end
     self.state = State
     if NoLoad ~= true then NoLoad = false end
     if not NoLoad then
+      self.loadingstate = State
       local LoadFct = self.loadfcts[self.state]
       self.states[State][LoadFct]()
+      self.loadingstate = nil
     end
   else
     print(string.format("DinaGE - ERROR: Invalid state '%s'", State))
@@ -211,7 +224,9 @@ end
 
 --TODO: help
 function Dina:loadController()
-  self.controller = CreateComponent(Dina, "Controller")
+  if not self.controller then
+    self.controller = CreateComponent(Dina, "Controller")
+  end
 end
 --TODO: help
 function Dina:setActionKeys(Object, FctName, State, ...)

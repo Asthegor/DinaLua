@@ -40,25 +40,25 @@ end
 
 function MenuManager:setNextKeys(...)
   if (...) then
-    Dina:setActionKeys(self, "nextItem", "released", ...)
+    Dina:setActionKeys(self, "nextItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "nextItem", "released", {"Keyboard", "down"}, {"Gamepad", "lefty", 1})
+    Dina:setActionKeys(self, "nextItem", "pressed", {"Keyboard", "down"}, {"Gamepad", "lefty", 1})
   end
 end
 
 function MenuManager:setPreviousKeys(...)
   if (...) then
-    Dina:setActionKeys(self, "previousItem", "released", ...)
+    Dina:setActionKeys(self, "previousItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "previousItem", "released", {"Keyboard", "up"}, {"Gamepad", "lefty", -1})
+    Dina:setActionKeys(self, "previousItem", "pressed", {"Keyboard", "up"}, {"Gamepad", "lefty", -1})
   end
 end
 
 function MenuManager:setValidateKeys(...)
   if (...) then
-    Dina:setActionKeys(self, "validateItem", "released", ...)
+    Dina:setActionKeys(self, "validateItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "validateItem", "released", {"Keyboard", "space"}, {"Gamepad", "a"})
+    Dina:setActionKeys(self, "validateItem", "pressed", {"Keyboard", "space"}, {"Gamepad", "a"})
   end
 end
 

@@ -80,7 +80,7 @@ function Keyboard:key(Key)
 end
 
 -- System functions
-Keyboard.__tostring = function(Keyboard, NoTitle) return Keyboard:toString(NoTitle) end
+--Keyboard.__tostring = function(Keyboard, NoTitle) return Keyboard:toString(NoTitle) end
 Keyboard.__index = Keyboard
 Keyboard.__name = "Keyboard"
 return Keyboard
