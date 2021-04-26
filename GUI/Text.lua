@@ -198,7 +198,7 @@ function Text:getTextHeight(Reset)
     return 0
   end
   local font = self:getFont()
-  if Reset then
+  if Reset or self.width == 0 then
     return font:getHeight()
   end
   local width, wrappedtext = font:getWrap(self.content, self.width)

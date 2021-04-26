@@ -36,17 +36,14 @@ local function hook_love_events(self)
     if dir == 0 then
       self.axebuttondown[jid][axis] = false
     end
-    self.checkstate = true
   end
   function love.gamepadpressed(joystick, button)
     local jid = joystick:getID()
     self.states[jid][button] = true
-    self.checkstate = true
   end
   function love.gamepadreleased(joystick, button)
     local jid = joystick:getID()
     self.states[jid][button] = false
-    self.checkstate = true
   end
 end
 -- TODO: proto
@@ -58,6 +55,18 @@ function Gamepad.new()
   hook_love_events(self)
   return self
 end
+-- TODO: proto
+function Gamepad:reset()
+  for joyId,_ in pairs(self.states) do
+    for button, _ in pairs(self.states[joyId]) do
+      self.states[joyId][button] = nil
+    end
+    for button, _ in pairs(self.axebuttondown[joyId]) do
+      self.axebuttondown[joyId][button] = nil
+    end
+  end
+end
+
 -- TODO: proto
 function Gamepad:button_down(JoystickId, Button, Direction)
   local joystick = self.joysticks[JoystickId]
@@ -71,28 +80,25 @@ function Gamepad:button_down(JoystickId, Button, Direction)
       end
     end
   end
-  if self.states[JoystickId][Button] then
-    local state = self.states[JoystickId][Button]
-    local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
-    if pcall_res then
-      -- Traitement des axes
-      if value ~= 0 and not self.axebuttondown[JoystickId][Button] then
-        if state and Direction ~= 0 then
-          if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
-            state = false
-            value = 0
-          else
-            self.axebuttondown[JoystickId][Button] = true
-          end
-        end --state and Direction ~= 0
-      else
-        state = false
-        value = 0
-      end --value ~= 0
-    end --pcall_res
-    return state, value
-  end --self.states[JoystickId][Button]
-  return false, 0
+  local state = self.states[JoystickId][Button]
+  local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
+  if pcall_res then
+    -- Traitement des axes
+    if value ~= 0 and not self.axebuttondown[JoystickId][Button] then
+      if state and Direction ~= 0 then
+        if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
+          state = false
+          value = 0
+        else
+          self.axebuttondown[JoystickId][Button] = true
+        end
+      end --state and Direction ~= 0
+    else
+      state = false
+      value = 0
+    end --value ~= 0
+  end --pcall_res
+  return state, value
 end
 -- TODO: proto
 function Gamepad:button_up(JoystickId, Button, Direction)
@@ -107,23 +113,20 @@ function Gamepad:button_up(JoystickId, Button, Direction)
       end
     end
   end
-  if self.states[JoystickId][Button] ~= nil then
-    local state = (self.states[JoystickId][Button] == false)
-    local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
-    if pcall_res then
-      if value ~= 0 then
-        state = self.states[JoystickId][Button]
-        if state and Direction ~= 0 then
-          if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
-            state = false
-            value = 0
-          end
-        end --state and Direction ~= 0
-      end --value ~= 0
-    end --pcall_res
-    return state, value
-  end --self.states[JoystickId][Button] ~= nil
-  return false, 0
+  local state = (self.states[JoystickId][Button] == false)
+  local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
+  if pcall_res then
+    if value ~= 0 then
+      state = self.states[JoystickId][Button]
+      if state and Direction ~= 0 then
+        if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
+          state = false
+          value = 0
+        end
+      end --state and Direction ~= 0
+    end --value ~= 0
+  end --pcall_res
+  return state, value
 end
 
 -- TODO: proto
@@ -133,8 +136,8 @@ function Gamepad:button(JoystickId, Button, Direction)
     return false, 0
   end
   if string.lower(Button) == "all" then
-    for _, state in pairs(self.states[JoystickId]) do
-      if state then
+    for _, btn in pairs(self.states[JoystickId]) do
+      if btn then
         return true, 1
       end
     end
@@ -152,6 +155,7 @@ function Gamepad:button(JoystickId, Button, Direction)
   end
   return isDown, value
 end
+
 -- TODO: proto
 function Gamepad:update(dt)
   for joyId,_ in pairs(self.states) do

@@ -37,6 +37,9 @@ local function CreateComponent(Dina, ComponentType, ...)
   if RComponent then
     local Component = RComponent.new(...)
     if Dina.loadingstate then
+      if not Dina.statecomponents[Dina.loadingstate] then
+        Dina.statecomponents[Dina.loadingstate] = {}
+      end
       table.insert(Dina.statecomponents[Dina.loadingstate], Component)
     end
     table.insert(Dina.components, Component)
@@ -107,15 +110,17 @@ function Dina:update(dt, WithState)
   else
     for i = 1, #self.components do
       local component = self.components[i]
-      if component.callbackZOrder then
-        component:callbackZOrder()
-      elseif component.isZOrderChanged then
-        if component:isZOrderChanged() == true then
-          calculate = true
+      if component then
+        if component.callbackZOrder then
+          component:callbackZOrder()
+        elseif component.isZOrderChanged then
+          if component:isZOrderChanged() == true then
+            calculate = true
+          end
         end
-      end
-      if component.update then
-        component:update(dt)
+        if component.update then
+          component:update(dt)
+        end
       end
     end
   end
@@ -139,8 +144,14 @@ Component to remove
 ]]--
 function Dina:removeComponent(Component)
   for i = #self.components, 1, -1 do
-    if self.components[i].remove or (Component and self.components[i].id == Component.id) then
-      table.remove(self.components, i)
+    if  Component then
+      if self.components[i].id == Component.id then
+        self.components[i].remove = true
+      end
+    else
+      if self.components[i].remove then
+        table.remove(self.components, i)
+      end
     end
   end
 end
@@ -190,7 +201,7 @@ function Dina:setState(State, NoLoad)
     if self.controller then
       self.controller:dissociate()
     end
-    if self.state ~= self.oldstate then
+    if self.state and self.state ~= self.oldstate then
       for _, component in pairs(self.statecomponents[self.state]) do
         self:removeComponent(component)
       end
@@ -206,7 +217,7 @@ function Dina:setState(State, NoLoad)
       self.loadingstate = nil
     end
   else
-    print(string.format("DinaGE - ERROR: Invalid state '%s'", State))
+    print(string.format("ERROR: Invalid state '%s'", State))
   end
 end
 --[[

@@ -75,7 +75,7 @@ Position de l'image sur l'axe des Y.
 Indique si l'origine de l'image sera le centre de l'image.
 ]]--
 function MenuManager:addImage(ImageName, X, Y, CenterOrigin)
-  local image = Dina("Image", ImageName, X, Y)
+  local image = Dina("Image", ImageName, X, Y, 1, 1, -100)
   if CenterOrigin == true then
     image:centerOrigin()
   end
@@ -150,13 +150,12 @@ Fonction à exécuter quand on quitte la sélection.
 Fonction à exécuter lorsqu'on active l'item sélectionné.
 ]]--
 function MenuManager:addItem(Text, FontName, FontSize, OnSelection, OnDeselection, OnValidation)
-  assert(type(Text) == "string" and Text ~= "", "ERROR: The parameter 'Text' must be a string not empty.")
+  assert(type(Text) == "string" and Text ~= "", "ERROR: The parameter 'Text' must not be an empty string.")
   assert(OnSelection == nil or type(OnSelection) == "function", "ERROR: The parameter 'OnSelection' must be a function.")
   assert(OnDeselection == nil or type(OnDeselection) == "function", "ERROR: The parameter 'OnDeselection' must be a function.")
   assert(OnValidation == nil or type(OnValidation) == "function", "ERROR: The parameter 'onValidation' must be a function.")
 
   local item = Dina("Text", Text)
---  Dina:removeComponent(item)
   item:setFont(FontName, FontSize)
   item.onselection = OnSelection
   item.ondeselection = OnDeselection
@@ -220,7 +219,6 @@ function MenuManager:previousItem()
 end
 
 function MenuManager:validateItem()
-  print("MenuManager:validateItem activated")
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item.onvalidation then

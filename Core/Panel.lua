@@ -47,7 +47,6 @@ function Panel.new(X, Y, Width, Height, BorderColor, BackColor, Z, Thickness)
   self:setBackColor(BackColor)
   self:setZOrder(Z)
   self.thickness = Thickness or 1
-  self.image = nil
   self.hover = false
   self.events = {}
   return self
@@ -69,23 +68,15 @@ proto Panel:drawPanel()
 ]]--
 function Panel:drawPanel()
   love.graphics.setColor(1,1,1,1)
-  if self.image == nil then
-    if self.backcolor then
-      love.graphics.setColor(self.backcolor)
-      local sw, sh = love.graphics.getDimensions()
-      love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
-    end
-    if self.bordercolor then
-      love.graphics.setColor(self.bordercolor)
-      love.graphics.setLineWidth(self.thickness)
-      love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
-      love.graphics.setLineWidth(1)
-    end
-  else
-    if self.imagecolor then
-      love.graphics.setColor(self.imagecolor)
-    end
-    love.graphics.draw(self.image, self.x, self.y, self.r, self.sx, self.sy, self.ox, self.oy)
+  if self.backcolor then
+    love.graphics.setColor(self.backcolor)
+    love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
+  end
+  if self.bordercolor then
+    love.graphics.setColor(self.bordercolor)
+    love.graphics.setLineWidth(self.thickness)
+    love.graphics.rectangle("line", self.x, self.y, self.width, self.height)
+    love.graphics.setLineWidth(1)
   end
   love.graphics.setColor(1,1,1,1)
 end
@@ -218,39 +209,6 @@ function Panel:setEvent(EventName, EventFunction)
   end
 end
 
---[[
-proto Panel:setImage(Image)
-.D This function set an image as background of the panel.
-]]--
-function Panel:setImage(Image)
-  self.image = Image
-  if self.image then
-    self.width = Image:getWidth()
-    self.height = Image:getHeight()
-  end
-end
---[[
-proto Panel:setImageOrigin(OriginX, OriginY)
-.D This function defines the origin coordinate of the image.
-]]--
-function Panel:setImageOrigin(OriginX, OriginY)
-  self.ox = SetDefaultNumber(OriginX, 0)
-  self.oy = SetDefaultNumber(OriginY, 0)
-end
---[[
-proto Panel:setImageColor(Color)
-.D This function sets the color used to draw the image.
-]]--
-function Panel:setImageColor(Color)
-  self.imagecolor = Color
-end
---[[
-proto Panel:setImageRotation(Rotation)
-.D This function sets the rotation value to apply to the image.
-]]--
-function Panel:setImageRotation(Rotation)
-  self.r = Rotation or 0
-end
 --[[
 proto Panel:getScale()
 .D This function returns the scales of the current Panel.

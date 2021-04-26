@@ -104,43 +104,42 @@ end
 function Controller:dissociate()
   self.objassoc = {}
   self.actions = {}
+  if self.gamepad then
+    self.gamepad:reset()
+  end
 end
 
 function Controller:update(dt)
   --Looking if a key or button has been pressed
-  if self.keyboard.checkstate or self.gamepad.checkstate then
-    local res = false
-    local dir = nil
-    for name,action in pairs(self.actions) do
-      for _,k in pairs(action.Keys) do
-        if k.ctl == "keyboard" then
-          if action.State == "pressed" then
-            res, dir = self.keyboard:key_down(k.key)
-          elseif action.State == "released" then
-            res, dir = self.keyboard:key_up(k.key)
-          else
-            res, dir = self.keyboard:key(k.key)
-          end
+  local res = false
+  local dir = 0
+  for name,action in pairs(self.actions) do
+    for _,k in pairs(action.Keys) do
+      if k.ctl == "keyboard" then
+        if action.State == "pressed" then
+          res, dir = self.keyboard:key_down(k.key)
+        elseif action.State == "released" then
+          res, dir = self.keyboard:key_up(k.key)
         else
-          local joyId = self.objassoc[action.ObjectId]
-          if joyId then
-            if action.State == "pressed" then
-              res, dir = self.gamepad:button_down(joyId, k.key, k.dir)
-            elseif action.State == "released" then
-              res, dir = self.gamepad:button_up(joyId, k.key, k.dir)
-            else
-              res, dir = self.gamepad:button(joyId, k.key, k.dir)
-            end
-          end
+          res, dir = self.keyboard:key(k.key)
         end
-        if res then
-          action.Object[action.FctName](action.Object, dir)
-          res = false
+      else
+        local joyId = self.objassoc[action.ObjectId]
+        if joyId then
+          if action.State == "pressed" then
+            res, dir = self.gamepad:button_down(joyId, k.key, k.dir)
+          elseif action.State == "released" then
+            res, dir = self.gamepad:button_up(joyId, k.key, k.dir)
+          else
+            res, dir = self.gamepad:button(joyId, k.key, k.dir)
+          end
         end
       end
+      if res then
+        action.Object[action.FctName](action.Object, dir)
+        res = false
+      end
     end
-    self.keyboard.checkstate = false
-    self.gamepad.checkstate = false
   end
   self.keyboard:update(dt)
   self.gamepad:update(dt)

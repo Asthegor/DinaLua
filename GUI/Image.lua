@@ -38,12 +38,10 @@ Z-order of the image (default: 1).
 ]]--
 function Image.new(File, X, Y, ScaleX, ScaleY, Z)
   local self = setmetatable(Parent.new(X, Y), Image)
-  self.filename = File
-  self.source = love.graphics.newImage(File)
-  self:setImage(self.source)
+  self:setImage(File)
   self:setFlip()
-  self:setImageOrigin()
-  self:setImageRotation()
+  self:setOrigin()
+  self:setRotation()
   self:setScale(ScaleX, ScaleY)
   self:setZOrder(Z)
   self.visible = true
@@ -59,7 +57,7 @@ function Image:draw(Color)
     if IsColorValid(Color) then
       love.graphics.setColor(Color)
     end
-    love.graphics.draw(self.source, self.x, self.y, self.r, self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
+    love.graphics.draw(self.source, self.x, self.y, math.rad(self.r), self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
     love.graphics.setColor(1,1,1,1)
   end
 end
@@ -84,12 +82,12 @@ function Image:setFlip(Flip)
 end
 
 --[[
-proto Image:setNewImage(File)
+proto Image:setImage(File)
 .D This function change the current image by the given one.
 .P File
 Path and name of the new image.
 ]]--
-function Image:setNewImage(File)
+function Image:setImage(File)
   if File == nil then
     File = ""
   end
@@ -133,6 +131,22 @@ proto Imge:centerOrigin()
 ]]--
 function Image:centerOrigin()
   self:setOrigin(self.width / 2, self.height / 2)
+end
+
+--[[
+proto Image:getRotation()
+.D Cette fonction retourne l'angle de rotation en degrés de l'image.
+]]--
+function Image:getRotation()
+  return self.r
+end
+
+--[[
+proto Image:setRotation(Rotation)
+.D Cette fonction applique une rotation en degrés à l'image.
+]]--
+function Image:setRotation(Rotation)
+  self.r = SetDefaultNumber(Rotation, 0)
 end
 
 --[[
