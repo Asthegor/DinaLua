@@ -36,22 +36,27 @@ local function hook_love_events(self)
     if dir == 0 then
       self.axebuttondown[jid][axis] = false
     end
+    self.checkstate = true
   end
   function love.gamepadpressed(joystick, button)
     local jid = joystick:getID()
     self.states[jid][button] = true
+    self.checkstate = true
   end
   function love.gamepadreleased(joystick, button)
     local jid = joystick:getID()
     self.states[jid][button] = false
+    self.checkstate = true
   end
 end
 -- TODO: proto
 function Gamepad.new()
   local self = setmetatable(Parent.new(), Gamepad)
-  self.states = {}
   self.joysticks = {}
+  
+  self.states = {}
   self.axebuttondown = {}
+  self.checkstate = true
   hook_love_events(self)
   return self
 end

@@ -40,9 +40,6 @@ proto Group:add(Component)
 .D This function add a given component to the group.
 .P Component
 Composant à ajouter au groupe.
-.P OffsetX
-
-.P OffsetY
 ]]--
 function Group:add(Component)
   table.insert(self.components, Component)
@@ -64,7 +61,7 @@ proto Group:remove(Component)
 .P Component
 Component to remove from the group.
 ]]--
-function Group:remove(Component)
+function Group:removeComponent(Component)
   for i=#self.components, 1, -1 do
     if self.components[i] == Component then
       Component.remove = true
@@ -137,9 +134,12 @@ function Group:getDimensions()
 end
 
 --[[
-proto Group:getDimensions()
-.D This function returns the width and height of the group.
-.R Width and height of the group.
+proto Group:setDimensions()
+.D This function sets the width and height of the group.
+.P Width 
+Width of the group.
+.P Height
+Height of the group.
 ]]--
 function Group:setDimensions(Width, Height)
   self.width = SetDefaultNumber(Width, self.width)

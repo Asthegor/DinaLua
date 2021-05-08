@@ -1,7 +1,7 @@
 local Panel = {
   _TITLE       = 'Dina Game Engine - Panel',
   _VERSION     = '2.0.4',
-  _URL         = 'https://dina.lacombedominique.com/documentation/templates/panel/',
+  _URL         = 'https://dina.lacombedominique.com/documentation/core/panel/',
   _LICENSE     = [[
 Copyright (c) 2020 LACOMBE Dominique
 ZLIB Licence
@@ -82,30 +82,42 @@ function Panel:drawPanel()
 end
 
 --[[
-proto Panel:getWidth()
+proto Panel:getWidth(Original)
 .D This functions returns the width of the panel.
+.P Original
+Indique si on doit utiliser les dimensions originelles.
 .R Returns the width of the panel.
 ]]--
-function Panel:getWidth()
-  return self.width
+function Panel:getWidth(Original)
+  if not Original then
+    return self.width
+  end
+  return self.originalwidth
 end
 
 --[[
-proto Panel:getHeight()
+proto Panel:getHeight(Original)
 .D This functions returns the height of the panel.
+.P Original
+Indique si on doit utiliser les dimensions originelles.
 .R Returns the height of the panel.
 ]]--
-function Panel:getHeight()
-  return self.height
+function Panel:getHeight(Original)
+  if not Original then
+    return self.height
+  end
+  return self.originalheight
 end
 
 --[[
-proto Panel:getDimensions()
-.D This functions returns the width and height of the text, depending on the font used.
-.R Returns the width and height of the text.
+proto Panel:getDimensions(Original)
+.D Cette fonction retourne la largeur et la hauteur.
+.P-f Original
+Indique si on doit retourner les dimensions originelles.
+.R Retourne la largeur et la hauteur.
 ]]--
-function Panel:getDimensions()
-  return self:getWidth(), self:getHeight()
+function Panel:getDimensions(Original)
+  return self:getWidth(Original), self:getHeight(Original)
 end
 
 --[[
@@ -231,7 +243,7 @@ function Panel:setScale(ScaleX, ScaleY)
   self.sx = ScaleX or 1
   self.sy = ScaleY or 1
   self.width = self.originalwidth*self.sx
-  self.height = self.originalheight*self.sx
+  self.height = self.originalheight*self.sy
 end
 --[[
 proto Panel:update(dt)

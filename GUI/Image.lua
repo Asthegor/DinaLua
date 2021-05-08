@@ -40,9 +40,9 @@ function Image.new(File, X, Y, ScaleX, ScaleY, Z)
   local self = setmetatable(Parent.new(X, Y), Image)
   self:setImage(File)
   self:setFlip()
-  self:setOrigin()
   self:setRotation()
   self:setScale(ScaleX, ScaleY)
+  self:setOrigin()
   self:setZOrder(Z)
   self.visible = true
   return self
@@ -121,8 +121,11 @@ Position on the X axis of the image origin (default: 0).
 Position on the Y axis of the image origin (default: 0).
 ]]--
 function Image:setOrigin(OX, OY)
+  local osx, osy = self:getScale()
+  self:setScale(1,1)
   self.ox = SetDefaultNumber(OX, 0)
   self.oy = SetDefaultNumber(OY, 0)
+  self:setScale(osx, osy)
 end
 
 --[[
@@ -130,7 +133,10 @@ proto Imge:centerOrigin()
 .D This function sets the origin on the center of the image.
 ]]--
 function Image:centerOrigin()
+  local osx, osy = self:getScale()
+  self:setScale(1,1)
   self:setOrigin(self.width / 2, self.height / 2)
+  self:setScale(osx, osy)
 end
 
 --[[

@@ -36,7 +36,7 @@ local DialogManager = {
   _VERSION     = '3.1.6',
   _URL         = 'https://dina.lacombedominique.com/documentation/gui/dialogmanager/',
   _LICENSE     = [[
-Copyright (c) 2019-2021 LACOMBE Dominique
+Copyright (c) 2019 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -735,28 +735,7 @@ function DialogManager:updateDialogManager(dt)
 end -- Update(dt)
 
 
---[[
-proto DialogManager:ToString(NoTitle)
-.D This function display all variables containing in the current DialogManager instance (tables and functions are excluded).
-.P NoTitle
-Indicates if the title must be displayed (false) or not (true).
-]]--
-function DialogManager:ToString(NoTitle)
-  local str = ""
-  if not NoTitle then
-    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
-  end
-  for k,v in pairs(self) do
-    local vtype = type(v)
-    if vtype == "function"        then goto continue end
-    if vtype == "table"           then goto continue end
-    if string.sub(k, 1, 1) == "_" then goto continue end
-    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
-    ::continue::
-  end
-  return str
-end
-DialogManager.__tostring = function(DialogManager, NoTitle) return 
+DialogManager.__call = function() return DialogManager.new() end
 DialogManager.__index = DialogManager
-
+DialogManager.__tostring = function() return "DialogManager" end
 return DialogManager

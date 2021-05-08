@@ -104,6 +104,9 @@ end
 function Controller:dissociate()
   self.objassoc = {}
   self.actions = {}
+  if self.keyboard then
+    self.keyboard.checkstate = false
+  end
   if self.gamepad then
     self.gamepad:reset()
   end
@@ -136,7 +139,7 @@ function Controller:update(dt)
         end
       end
       if res then
-        action.Object[action.FctName](action.Object, dir)
+        action.Object[action.FctName](action.Object, dir, dt)
         res = false
       end
     end

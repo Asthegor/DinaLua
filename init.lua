@@ -17,11 +17,8 @@ local CurrentFile = (...):gsub("^(.*/+)", "")
 local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 local EngineFolders = love.filesystem.getDirectoryItems(CurrentFolder)
 local FunctionsFolder = CurrentFolder.."/Functions"
---for _,path in ipairs(EngineFolders) do
---  package.path = package.path .. ";Dina."..path..".?.lua"
---end
 
-
+-- Local functions
 local function InitializeGlobalFunctions()
   local files = love.filesystem.getDirectoryItems(FunctionsFolder)
   for k, filename in ipairs(files) do
@@ -57,6 +54,7 @@ local function Initialize(self)
   self.states = {}
   self.loadfcts = {}
   self.statecomponents = {}
+  self.datas = {}
 
   self.width = love.graphics.getWidth()
   self.height = love.graphics.getHeight()
@@ -64,6 +62,20 @@ end
 local function ToString()
   return Dina._TITLE .. "\n" .. Dina._VERSION .. "\n" .. Dina._URL .. "\n" .. Dina._LICENSE
 end
+local function SearchDirItem(Item, Path)
+  local paths = love.filesystem.getDirectoryItems(Path)
+  for _, name in pairs(paths) do
+    if string.lower(name) == string.lower(Item) then
+      return Path .. "/" .. name
+    end
+    local filepath = SearchDirItem(Item, Path .. "/" .. name)
+    if filepath then
+      return filepath
+    end
+  end
+  return nil
+end
+
 
 --[[
 proto Dina:draw(WithState)
@@ -92,7 +104,7 @@ end
 
 --[[
 proto Dina:update(dt)
-.D If a state has been set, this function launches the update fonction of the current state. Otherwise, the function launches the update of all of its components.
+.D Cette fonction lance la fonction update de l'état courant (s'il a été défini). Autrement, cette fonction lance la fonction update de tous les composants chargés.
 .P dt
 Delta time.
 ]]--
@@ -138,31 +150,50 @@ end
 
 --[[
 proto Dina:removeComponent(Component)
-.D This function removes all components indicated to be removed or the given component from the list of components.
+.D Cette fonction supprime le composant fourni ou tous les composants indiqués comme à supprimer.
 .P Component
 Component to remove
 ]]--
 function Dina:removeComponent(Component)
   for i = #self.components, 1, -1 do
-    if  Component then
-      if self.components[i].id == Component.id then
-        self.components[i].remove = true
-      end
-    else
-      if self.components[i].remove then
-        table.remove(self.components, i)
-      end
+    if self.components[i].remove or 
+       (Component and self.components[i].id == Component.id) then
+      table.remove(self.components, i)
     end
   end
 end
 
 --[[
+proto Dina:setGlobalValue(Name, Data)
+.D Cette fonction permet de créer une donnée globale qui pourra être utilisée partout dans le code. Si la donnée existe déjà, elle sera écrasée.
+.P Name
+Nom de la donnée
+.P Data
+Valeur de la donnée
+]]--
+function Dina:setGlobalValue(Name, Data)
+  assert(IsStringValid(string.lower(Name)), "ERROR: Name must not be empty.")
+  self.datas[string.lower(Name)] = Data
+end
+
+--[[
+proto Dina:getGlobalValue(Name)
+.D Cette fonction permet de récupérer la valeur d'une donnée globale.
+.P Name
+Nom de la donnée
+.R Retourne la valeur de la donnée si elle existe; autrement retourne nil.
+]]--
+function Dina:getGlobalValue(Name)
+  return self.datas[string.lower(Name)]
+end
+
+--[[
 proto Dina:addState(State, File, Load)
-.D This function add a new state with the given file. If the given state already exists, the function does nothing.
+.D Cette fonction ajoute un nouvel état avec le fichier fourni. Si l'état existe déjà, aucun changement n'est effectué.
 .P File
-Path and name of the file without extension.
+Chemin et nom du fichier sans extension.
 .P Load
-Name of the function to load (by default, "load").
+Nom de la fonction à lancer lors du chargement de l'état (par défaut, "load").
 ]]--
 function Dina:addState(State, File, Load)
   if not self:isValidState(State) then
@@ -178,9 +209,9 @@ end
 
 --[[
 proto Dina:removeState(State)
-.D Cette fonction permet de retirer un etat donne.
+.D Cette fonction permet de retirer un état donné.
 .P State
-Etat a retirer.
+Etat à retirer.
 ]]--
 function Dina:removeState(State)
   if self:isValidState(State) then
@@ -190,13 +221,13 @@ end
 
 --[[
 proto Dina:setState(State)
-.D This function sets the state to the given one and launches the given Load function.
+.D Cette fonction définit l'état courant et lance la fonction Load enregistrée.
 .P State
-New state to set.
+Nouvel état à définir.
 .P NoLoad
-Indicates if the Load function is launches (value : false; default) or not (value : true).
+Indique si la fonction Load est à exécuter (true) ou non (false; valeur par default).
 ]]--
-function Dina:setState(State, NoLoad)
+function Dina:setState(State)
   if self:isValidState(State) then
     if self.controller then
       self.controller:dissociate()
@@ -205,66 +236,69 @@ function Dina:setState(State, NoLoad)
       for _, component in pairs(self.statecomponents[self.state]) do
         self:removeComponent(component)
       end
-      self.statecomponents[self.state] = nil
+      self.statecomponents[self.state] = {}
       self.oldstate = self.state
     end
     self.state = State
-    if NoLoad ~= true then NoLoad = false end
-    if not NoLoad then
-      self.loadingstate = State
-      local LoadFct = self.loadfcts[self.state]
-      self.states[State][LoadFct]()
-      self.loadingstate = nil
-    end
+    self.loadingstate = State
+    local LoadFct = self.loadfcts[self.state]
+    self.states[State][LoadFct]()
+    self.loadingstate = nil
   else
     print(string.format("ERROR: Invalid state '%s'", State))
   end
 end
 --[[
 proto Dina:isValidState(State)
-.D This function check if the given state has already been set (true) or not (false).
+.D Cette fonction vérifie si l'état donné a déjà été défini (true) ou non (false).
 .P State
-The state to check.
-.R Returns if the state already exists.
+Etat à vérifer.
+.R Retourne true si l'état existe déjà; false autrement.
 ]]--
 function Dina:isValidState(State)
   return self.states[State] and true or false
 end
 
 
-
---TODO: help
+--[[
+proto Dina:loadController()
+.D Cette fonction permet d'initialiser la gestion des contrôleurs.
+]]--
 function Dina:loadController()
   if not self.controller then
     self.controller = CreateComponent(Dina, "Controller")
   end
 end
---TODO: help
-function Dina:setActionKeys(Object, FctName, State, ...)
+
+--[[
+proto Dina:setActionKeys(Object, FctName, State, ...)
+.D Cette fonction permet d'associer une ou plusieurs touches à la fonction donnée.
+.P Object
+Objet qui doit contenir la fonction à exécuter.
+.P FctName
+Nom de la fonction à exécuter.
+.P Mode
+Mode de gestion des touches : 'pressed', 'released' ou 'continuous'.
+.P ...
+Liste des touches devant déclencher l'exécution de la fonction (voir les tutoriels ou exemples pour plus de détails).
+]]--
+function Dina:setActionKeys(Object, FctName, Mode, ...)
+  assert(self.controller ~= nil, "ERROR: loadController function must have been called before setting action keys.")
   assert(type(Object) == "table", "ERROR: invalid Object parameter.")
   assert(type(Object[FctName]) == "function", "ERROR: invalid FctName parameter.")
-  State = string.lower(State)
-  assert(State == "pressed" or State == "released" or State == "continuous", "ERROR: invalid State parameter; must be 'pressed', 'released' or 'continuous'.")
-  local UID = self.controller:associate(Object, FctName, State)
+  Mode = string.lower(Mode)
+  assert(Mode == "pressed" or Mode == "released" or Mode == "continuous", "ERROR: invalid Mode parameter; must be 'pressed', 'released' or 'continuous'.")
+  local UID = self.controller:associate(Object, FctName, Mode)
   self.controller:setActionKeys(UID, ...)
 end
 
-
-local function SearchDirItem(Item, Path)
-  local paths = love.filesystem.getDirectoryItems(Path)
-  for _, name in pairs(paths) do
-    if string.lower(name) == string.lower(Item) then
-      return Path .. "/" .. name
-    end
-    local filepath = SearchDirItem(Item, Path .. "/" .. name)
-    if filepath then
-      return filepath
-    end
+function Dina:resetActionKeys()
+  if self.controller then
+    self.controller:dissociate()
   end
-  return nil
 end
 
--- TODO: help
+-- System function
 function Dina:require(Component)
   local path = SearchDirItem(Component..".lua", self.path)
   if path then
@@ -276,7 +310,7 @@ end
 
 Initialize(Dina)
 
-
+-- System functions
 Dina.__call = function(...) return CreateComponent(...) end
 Dina.__tostring = function() return ToString() end
 Dina = setmetatable(Dina, Dina) -- DO NOT REMOVE
