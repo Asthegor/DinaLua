@@ -735,7 +735,28 @@ function DialogManager:updateDialogManager(dt)
 end -- Update(dt)
 
 
-DialogManager.__call = function() return DialogManager.new() end
+--[[
+proto DialogManager:ToString(NoTitle)
+.D This function display all variables containing in the current DialogManager instance (tables and functions are excluded).
+.P NoTitle
+Indicates if the title must be displayed (false) or not (true).
+]]--
+function DialogManager:ToString(NoTitle)
+  local str = ""
+  if not NoTitle then
+    str = str .. self._TITLE .. " (".. self._VERSION ..")\n" .. self._URL
+  end
+  for k,v in pairs(self) do
+    local vtype = type(v)
+    if vtype == "function"        then goto continue end
+    if vtype == "table"           then goto continue end
+    if string.sub(k, 1, 1) == "_" then goto continue end
+    str = str .. "\n" .. tostring(k) .. " : " .. tostring(v)
+    ::continue::
+  end
+  return str
+end
+DialogManager.__tostring = function(DialogManager, NoTitle) return DialogManager:ToString(NoTitle) end
 DialogManager.__index = DialogManager
-DialogManager.__tostring = function() return "DialogManager" end
+DialogManager.__name = "DialogManager"
 return DialogManager

@@ -121,11 +121,8 @@ Position on the X axis of the image origin (default: 0).
 Position on the Y axis of the image origin (default: 0).
 ]]--
 function Image:setOrigin(OX, OY)
-  local osx, osy = self:getScale()
-  self:setScale(1,1)
   self.ox = SetDefaultNumber(OX, 0)
   self.oy = SetDefaultNumber(OY, 0)
-  self:setScale(osx, osy)
 end
 
 --[[

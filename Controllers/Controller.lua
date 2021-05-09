@@ -104,9 +104,6 @@ end
 function Controller:dissociate()
   self.objassoc = {}
   self.actions = {}
-  if self.keyboard then
-    self.keyboard.checkstate = false
-  end
   if self.gamepad then
     self.gamepad:reset()
   end

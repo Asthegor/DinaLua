@@ -20,11 +20,9 @@ setmetatable(Keyboard, {__index = Parent})
 local function hook_love_events(self)
   function love.keypressed(key, scancode, isrepeat)
     self.key_state[key] = true
-    self.checkstate = true
   end
   function love.keyreleased(key, scancode)
     self.key_state[key] = false
-    self.checkstate = true
   end
 end
 
@@ -32,7 +30,6 @@ end
 function Keyboard.new()
   local self = setmetatable(Parent.new(), Keyboard)
   self.key_state = {}
-  self.checkstate = false
   hook_love_events(self)
   return self
 end
@@ -81,7 +78,6 @@ function Keyboard:key(Key)
 end
 
 -- System functions
---Keyboard.__tostring = function(Keyboard, NoTitle) return Keyboard:toString(NoTitle) end
 Keyboard.__index = Keyboard
 Keyboard.__name = "Keyboard"
 return Keyboard
