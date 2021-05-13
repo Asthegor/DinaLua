@@ -43,6 +43,7 @@ Composant à ajouter au groupe.
 ]]--
 function Group:add(Component)
   table.insert(self.components, Component)
+  Dina:removeComponent(Component)
   self:updateDimensions()
 end
 
@@ -111,11 +112,14 @@ function Group:updateDimensions()
     if y == nil or cy < y then
       y = cy
     end
-    if w == nil or w < cx + cw then
-      w = cx + cw
+    local cfx, cfy = component:getFlip()
+    local cfxv = cfx > 0 and 1 or 0
+    if w == nil or w < cx + cw * cfxv then
+      w = cx + cw * cfxv
     end
-    if h == nil or h < cy + ch then
-      h = cy + ch
+    local cfyv = cfy > 0 and 1 or 0
+    if h == nil or h < cy + ch * cfyv then
+      h = cy + ch * cfyv
     end
   end
   if w and x and h and y then
@@ -164,6 +168,20 @@ function Group:setPosition(X, Y)
   end
   self.x = X
   self.y = Y
+end
+
+--[[
+proto Group:center()
+.D Cette fonction permet de centrer tous les composants par rapport à la position du groupe. Elle est similaire à la fonction centerOrigin d'un composant image.
+]]--
+function Group:center()
+  local gw, gh = self:getDimensions()
+  local diffX = -1 * (gw/2)
+  local diffY = -1 * (gh/2)
+  for _,v in pairs(self.components) do
+    local x, y = v:getPosition()
+    v:setPosition(x + diffX, y + diffY)
+  end
 end
 
 --[[

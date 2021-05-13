@@ -174,6 +174,7 @@ function MenuManager:addItem(Text, FontName, FontSize, OnSelection, OnDeselectio
   self.itemgroup:setDimensions(gw, gh + self.ctrlspace)
 
   table.insert(self.items, item)
+  return item
 end
 
 --[[

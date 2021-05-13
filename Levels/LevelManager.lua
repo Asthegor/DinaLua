@@ -1,9 +1,9 @@
 local LevelManager = {
-  _TITLE       = 'Dina Game Engine - Level Manager',
-  _VERSION     = '2.0.4',
+  _TITLE       = 'Dina Level Manager',
+  _VERSION     = '2.2',
   _URL         = 'https://dina.lacombedominique.com/documentation/levels/levelmanager/',
   _LICENSE     = [[
-Copyright (c) 2019 LACOMBE Dominique
+Copyright (c) 2019-2021 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -32,9 +32,11 @@ function LevelManager.new(ToDraw)
   self.path = ""
   self.updatecanvas = false
   self.canvas = {}
-  self.visible = true
+  self:setVisible(true)
+  self:setScale()
+  self:setOffset()
   if ToDraw == false then
-    self.visible = false
+    self:setVisible(false)
   end
   return self
 end
@@ -49,29 +51,41 @@ local function LoadTileset(LevelManager, Tileset)
   local tih = Tileset.imageheight
   local tm = Tileset.margin
   local ts = Tileset.spacing
+  local sid = Tileset.firstgid
   local path = LevelManager.path .. Tileset.image
   while string.find(path, "%.%.") ~= nil do
     path = string.sub(path, string.find(path, "%.%.") + 3)
+    local lmp = LevelManager.path
+    if string.find(lmp, "/", -1) then
+      lmp = string.sub(lmp, 1, #lmp - 1)
+    end
+    if string.find(lmp, "/") then
+      lmp = string.sub(lmp, 1, #lmp - string.find(string.reverse(lmp), "/") + 1)
+    end
+    LevelManager.path = lmp .. (string.find(lmp, "/", -1) and "" or "/")
   end
+  path = LevelManager.path .. path
   table.insert(LevelManager.images, love.graphics.newImage(path))
   table.insert(LevelManager.tilesets, Tileset)
   for i = 1, Tileset.tilecount do
     LevelManager.tileids[Tileset.firstgid + i - 1] = true
   end
-
-  local nbRows = math.ceil((tih - (tm * 2)) / (tth + ts))
-  local nbCols = math.ceil((tiw - (tm * 2)) / (ttw + ts))
-  local x, y
+  local nbCols = Tileset.columns
+  local nbRows = Tileset.tilecount / nbCols
+  local x, y, r, c
   for r = 1, nbRows do
     for c = 1, nbCols do
       x = (c - 1) * (ttw + ts) + tm
       y = (r - 1) * (tth + ts) + tm
-      local squad = {}
-      squad.obj = love.graphics.newQuad(x, y, ttw, tth, tiw, tih)
-      squad.width = ttw
-      squad.height = tth
-      squad.numimg = #LevelManager.images
-      table.insert(LevelManager.squads, squad)
+      if x + ttw <= tiw and y + tth <= tih then
+        local squad = {}
+        squad.obj = love.graphics.newQuad(x, y, ttw, tth, tiw, tih)
+        squad.width = ttw
+        squad.height = tth
+        squad.numimg = #LevelManager.images
+        LevelManager.squads[sid] = squad
+        sid = sid + 1
+      end
     end
   end
 end
@@ -215,13 +229,14 @@ local function IsValidImgId(LevelManager, ImgId)
 end
 
 
-local function DrawLayer(LevelManager, Layer, OffsetX, OffsetY, ScaleX, ScaleY)
+local function DrawLayer(LevelManager, Layer)
   if not IsDrawable(Layer) then
     return
   end
   local w, h, tw, th = LevelManager:getDimensions()
-  local offsetX = (Layer.offsetx - OffsetX) * ScaleX
-  local offsetY = (Layer.offsety - OffsetY) * ScaleY
+  local lmsx, lmsy = LevelManager:getScale()
+  local offsetX = Layer.offsetx * lmsx
+  local offsetY = Layer.offsety * lmsy
   local x = 0
   local y = 0
 
@@ -232,6 +247,12 @@ local function DrawLayer(LevelManager, Layer, OffsetX, OffsetY, ScaleX, ScaleY)
       local data = Layer.data[posTile]
       if data ~= nil and data ~= 0 then
         local numTile, r, sx, sy = GetRotation(data)
+        if LevelManager.squads[numTile] == nil then
+          for k, v in pairs(LevelManager.squads) do
+            print(k, v)
+          end
+          print("error")
+        end
         local numimg = LevelManager.squads[numTile].numimg
         local image = LevelManager.images[numimg]
         local quad = LevelManager.squads[numTile].obj
@@ -239,8 +260,8 @@ local function DrawLayer(LevelManager, Layer, OffsetX, OffsetY, ScaleX, ScaleY)
         local qh = LevelManager.squads[numTile].height
         local diffh = qh - th
         local ox, oy = 0, 0
-        x = (col-1) * tw * ScaleX
-        y = (row-1) * th * ScaleY
+        x = (col-1) * tw * lmsx
+        y = (row-1) * th * lmsy
         if r > 0 then
           -- rotation  90° on the right
           ox = ox + qw - tw
@@ -256,35 +277,35 @@ local function DrawLayer(LevelManager, Layer, OffsetX, OffsetY, ScaleX, ScaleY)
           -- no rotation
           oy = oy + math.abs(diffh) > 0 and diffh or 0
         end
-        love.graphics.draw(image, quad, x+offsetX, y+offsetY, r, sx*ScaleX, sy*ScaleY, ox, oy)
+        love.graphics.draw(image, quad, x+offsetX, y+offsetY, r, sx*lmsx, sy*lmsy, ox, oy)
       end
     end
   end
   love.graphics.setColor(1,1,1,1)
 end
-local function DrawImage(LevelManager, Layer, OffsetX, OffsetY, ScaleX, ScaleY)
+local function DrawImage(LevelManager, Layer)
   if not IsDrawable(Layer) then
     return
   end
-  local x = (Layer.offsetx - OffsetX) * ScaleX
-  local y = (Layer.offsety - OffsetY) * ScaleY
-
-  -- TODO: rotation ?
+  local lmsx, lmsy = LevelManager:getScale()
+  local x = Layer.offsetx * lmsx
+  local y = Layer.offsety * lmsy
 
   love.graphics.setColor(1,1,1,Layer.opacity)
   local image = LevelManager.images[Layer.numImg]
-  love.graphics.draw(image, x, y, 0, ScaleX, ScaleY)
+  love.graphics.draw(image, x, y, 0, lmsx, lmsy)
   love.graphics.setColor(1,1,1,1)
 end
-local function DrawObjectTile(LevelManager, Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
+local function DrawObjectTile(LevelManager, Object, Alpha)
   local numTile, r, sx, sy = GetRotation(Object.gid)
   if numTile > 0 then
     local numimg = LevelManager.squads[numTile].numimg
     local image = LevelManager.images[numimg]
     local quad = LevelManager.squads[numTile].obj
     local _, _, tw, th = LevelManager:getDimensions()
-    local x = (Object.x - OffsetX) * ScaleX
-    local y = (Object.y - OffsetY) * ScaleY
+    local lmsx, lmsy = LevelManager:getScale()
+    local x = Object.x * lmsx
+    local y = Object.y * lmsy
     local oh = Object.height
     local ow = Object.width
     local ox, oy = 0, oh
@@ -307,21 +328,21 @@ local function DrawObjectTile(LevelManager, Object, OffsetX, OffsetY, Alpha, Sca
       r = math.rad(ro)
     end
     love.graphics.setColor(1,1,1,Alpha)
-    love.graphics.draw(image, quad, x, y, r, sx * ScaleX, sy * ScaleY, ox, oy)
+    love.graphics.draw(image, quad, x, y, r, sx * lmsx, sy * lmsy, ox, oy)
     love.graphics.setColor(1,1,1,1)
   end
 end
-local function DrawObjectForm(LevelManager, Object, OffsetX, OffsetY, Alpha, ScaleX, ScaleY)
+local function DrawObjectForm(LevelManager, Object, Alpha)
   -- Nothing to draw
 end
-local function DrawObject(LevelManager, Object, OffsetX, OffsetY, ScaleX, ScaleY)
+local function DrawObject(LevelManager, Object)
   if not IsDrawable(Object) then
     return
   end
   if Object.gid ~= nil then
-    DrawObjectTile(LevelManager, Object, OffsetX, OffsetY, Object.opacity, ScaleX, ScaleY)
+    DrawObjectTile(LevelManager, Object, Object.opacity)
   else
-    DrawObjectForm(LevelManager, Object, OffsetX, OffsetY, Object.opacity, ScaleX, ScaleY)
+    DrawObjectForm(LevelManager, Object, Object.opacity)
   end
 end
 --[[
@@ -332,30 +353,22 @@ proto LevelManager:draw(OffsetX, OffsetY, ScaleX, ScaleY)
 .P ScaleX
 .P ScaleY
 ]]--
-function LevelManager:draw(OffsetX, OffsetY, ScaleX, ScaleY)
+function LevelManager:draw()
   if self.visible then
-    OffsetX = OffsetX or 0
-    OffsetY = OffsetY or 0
-    if self.oldOffsetX ~= OffsetX then
-      self.oldOffsetX = OffsetX
-    end
-    if self.oldOffsetY ~= OffsetY then
-      self.oldOffsetY = OffsetY
-    end
+    local lmox, lmoy = self:getOffset()
+    local lmsx, lmsy = self:getScale()
 
-    ScaleX = ScaleX or 1
-    ScaleY = ScaleY or ScaleX or 1
-    if self.oldScaleX ~= ScaleX then
-      self.oldScaleX = ScaleX
+    if self.oldScaleX ~= lmsx then
+      self.oldScaleX = lmsx
       self.updatecanvas = true
     end
-    if self.oldScaleY ~= ScaleY then
-      self.oldScaleY = ScaleY
+    if self.oldScaleY ~= lmsy then
+      self.oldScaleY = lmsy
       self.updatecanvas = true
     end
-    if ScaleX ~= 1 and ScaleY ~= 1 then
-      local drawWidth = self.file.width * self.file.tilewidth * ScaleX
-      local drawHeight = self.file.height * self.file.tileheight * ScaleY
+    if lmsx ~= 1 and lmsy ~= 1 then
+      local drawWidth = self.file.width * self.file.tilewidth * lmsx
+      local drawHeight = self.file.height * self.file.tileheight * lmsy
       if drawWidth ~= self.canvas:getWidth() or drawHeight ~= self.canvas:getHeight() then
         self.canvas = love.graphics.newCanvas(drawWidth, drawHeight)
         self.updatecanvas = true
@@ -368,18 +381,18 @@ function LevelManager:draw(OffsetX, OffsetY, ScaleX, ScaleY)
       for i = 1, #self.layers do
         local layer = self.layers[i]
         if layer.type == "tilelayer" then
-          DrawLayer(self, layer, 0, 0, ScaleX, ScaleY)
+          DrawLayer(self, layer)
         elseif layer.type == "imagelayer" then
-          DrawImage(self, layer, 0, 0, ScaleX, ScaleY)
+          DrawImage(self, layer)
         end
       end
       -- Affichage des objets
       for i = 1, #self.objects do
-        DrawObject(self, self.objects[i], 0, 0, ScaleX, ScaleY)
+        DrawObject(self, self.objects[i])
       end
       love.graphics.setCanvas()
     end
-    love.graphics.draw(self.canvas, OffsetX * -1, OffsetY * -1)
+    love.graphics.draw(self.canvas, lmox * -1, lmoy * -1)
     self.updatecanvas = false
   end
 end
@@ -693,6 +706,63 @@ function LevelManager:restoreImageId(Object)
     Object.gid = Object.originalGid
     self.updatecanvas = true
   end
+end
+
+--[[
+proto LevelManager:setOffset(OffsetX, OffsetY)
+.D This function set the offsets.
+.P OffsetX
+OffsetX
+.P OffsetY
+OffsetY
+]]--
+function LevelManager:setOffset(OffsetX, OffsetY)
+  self.offsetx = OffsetX or 0
+  self.offsety = OffsetY or 0
+end
+--[[
+proto LevelManager:getOffset()
+.D This function returns the offsets.
+.R Returns the offsets.
+]]--
+function LevelManager:getOffset()
+  return self.offsetx, self.offsety
+end
+--[[
+proto LevelManager:setScale(ScaleX, ScaleY)
+.D This function sets the scales.
+.P ScaleX
+ScaleX
+.P ScaleY
+ScaleY
+]]--
+function LevelManager:setScale(ScaleX, ScaleY)
+  self.scalex = ScaleX or 1
+  self.scaley = ScaleY or 1
+end
+--[[
+proto LevelManager:getScale()
+.D This function returns the scale.
+.R Returns the scale.
+]]--
+function LevelManager:getScale()
+  return self.scalex, self.scaley
+end
+
+--[[
+proto LevelManager:setVisible(Visible)
+.D This function set the level visible (true) or not (false).
+]]--
+function LevelManager:setVisible(Visible)
+  self.visible = Visible == true and true or false
+end
+--[[
+proto LevelManager:getVisible()
+.D This function returns if the level is visible (true) or not (false).
+.R Returns if the level is visible (true) or not (false).
+]]--
+function LevelManager:getVisible()
+  return self.visible
 end
 
 --[[

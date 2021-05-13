@@ -36,10 +36,10 @@ Scale on the Y axis of the image (default: 1).
 Z-order of the image (default: 1).
 .R Return an instance of Image object.
 ]]--
-function Image.new(File, X, Y, ScaleX, ScaleY, Z)
+function Image.new(File, X, Y, ScaleX, ScaleY, Z, FlipX, FlipY)
   local self = setmetatable(Parent.new(X, Y), Image)
   self:setImage(File)
-  self:setFlip()
+  self:setFlip(FlipX, FlipY)
   self:setRotation()
   self:setScale(ScaleX, ScaleY)
   self:setOrigin()
@@ -57,28 +57,47 @@ function Image:draw(Color)
     if IsColorValid(Color) then
       love.graphics.setColor(Color)
     end
-    love.graphics.draw(self.source, self.x, self.y, math.rad(self.r), self.sx * self.flip, self.sy * self.flip, self.ox, self.oy)
+    love.graphics.draw(self.source, self.x, self.y, math.rad(self.r), self.sx * self.flipx, self.sy * self.flipy, self.ox, self.oy)
     love.graphics.setColor(1,1,1,1)
   end
 end
 
 --[[
 proto Image:getFlip()
-.D This function returns the flip of the image.
-.R Returns the flip of the image.
+.D This function returns the flips of the image.
+.R Returns the flips of the image.
 ]]--
 function Image:getFlip()
-  return self.flip
+  return self.flipx, self.flipy
 end
 
 --[[
-proto Image:setFlip(Flip)
+proto Image:setFlip(FlipX, FlipY)
 .D This functions define on which side the imge must be displayed.
-.P Flip
+.P FlipX
+Direction to display the image. 1 for standard and -1 for reverse.
+.P FlipY
 Direction to display the image. 1 for standard and -1 for reverse.
 ]]--
-function Image:setFlip(Flip)
-  self.flip = SetDefaultNumber(Flip, 1)
+function Image:setFlip(FlipX, FlipY)
+  if FlipX ~= 1 and FlipX ~= -1 then
+    FlipX = 1
+  end
+  if FlipY ~= 1 and FlipY ~= -1 then
+    FlipY = 1
+  end
+  self.flipx = FlipX
+  self.flipy = FlipY
+  if self.flipx < 0 then
+    local x, y = self:getPosition()
+    local w, h = self:getDimensions()
+    self:setPosition(x + w, y)
+  end
+  if self.flipy < 0 then
+    local x, y = self:getPosition()
+    local w, h = self:getDimensions()
+    self:setPosition(x, y + h)
+  end
 end
 
 --[[
