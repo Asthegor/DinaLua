@@ -173,6 +173,7 @@ function LevelManager:load(File)
   end
   self.canvas = love.graphics.newCanvas(self.file.width * self.file.tilewidth, self.file.height * self.file.tileheight)
 end
+
 --*************************************************************
 --* Drawings
 --*************************************************************
@@ -591,6 +592,7 @@ function LevelManager:getObjectsOnGrid(Row, Col)
   end
   return objects
 end
+
 --[[
 proto LevelManager:getDimensions()
 .D This function returns the number of columns and rows of the grid and the width (in pixels) and height (in pixels) of each cell.
@@ -640,6 +642,7 @@ local function RestoreLayerDatas(Layer)
     Layer.data[k] = v
   end
 end
+
 --[[
 proto LevelManager:setTileIdAtPos(Layer, Row, Col, ImgId, Force)
 .D This function sets the tile id at the given cell coordonate on the given layer by the given id. Must be forced if the new id is 0.
@@ -794,11 +797,14 @@ Position on the Y-axis.
 ]]--
 function LevelManager:convertCoordToRowCol(X, Y)
   local mw, mh, tw, th = self:getDimensions()
-  if X < 0 or X > mw * tw or Y < 0 or Y > mh * th then
-    return nil, nil
-  end
   local col = math.floor(X / tw) + 1
   local row = math.floor(Y / th)
+  if X < 0 or X > mw * tw then
+    col = nil
+  end
+  if Y < 0 or Y > mh * th then
+    row = nil
+  end
   return row, col
 end
 --[[
@@ -808,7 +814,7 @@ proto LevelManager:reload()
 function LevelManager:reload()
   for _,layer in ipairs(self.layers) do
     self:restoreOpacity(layer)
-    RestoreLayerDatas(self, layer)
+    RestoreLayerDatas(layer)
   end
   self:resetObjects()
   self.updatecanvas = true
