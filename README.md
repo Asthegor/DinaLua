@@ -4,7 +4,7 @@ __Description__
 
 Facilitez vous la création de jeux vidéo !
 
-"Dina GE" est un moteur de jeu en Lua qui se repose sur le framework Löve2D.
+"Dina Lua" est un moteur de jeu en Lua qui se repose sur le framework Löve2D.
 Il offre de nombreuses fonctionnalités tout en laissant le contrôle au développeur.
 
 Voici quelques unes des fonctionnalités qu'il intègre :
