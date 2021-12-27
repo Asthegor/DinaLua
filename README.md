@@ -1,4 +1,4 @@
-# Dina GE
+# Dina Lua
 
 __Description__
 
@@ -18,14 +18,14 @@ Vous trouverez des tutoriels (avec leur code source) et des exemples d'utilisati
 
 Alors, n'attendez plus et lancez-vous ! Vous garderez toujours le contrôle de votre création !
 
-Suivez toute l'actualité de Dina GE sur notre page Facebook : https://www.facebook.com/DinaGameEngine
+Suivez toute l'actualité de Dina GE sur notre page Facebook : https://www.facebook.com/DinaLuaGameEngine
 
 
 __Installation__
 
 Décompresser le contenu de l'archive dans le répertoire de votre jeu.
 
-Vous devez avoir un répertoire nommé "DinaGE" qui contient les fichiers de ce repository.
+Vous devez avoir un répertoire nommé "Dina" qui contient les fichiers de ce repository.
 
 Pour plus d'explications, veuillez vous référer au tutoriel ci-dessous :
 https://dina.lacombedominique.com/tutorials/
