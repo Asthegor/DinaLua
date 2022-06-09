@@ -624,6 +624,26 @@ function LevelManager:getObjectsOnGrid(Row, Col)
 end
 
 --[[
+proto LevelManager:getObjectsAtCoord(X, Y)
+.D This function returns all objects at the given coordonates.
+.P X
+Position on the X-axis.
+.P Y
+Position on the Y-axis.
+.R Returns all objects at the given coordonates.
+]]--
+function LevelManager:getObjectsAtCoord(X, Y)
+  local objects = {}
+  for i = 1, #self.objects do
+    local object = self.objects[i]
+    if CollidePointRect(X, Y, object.x, object.y, object.width, object.height) then
+      table.insert(objects, object)
+    end
+  end
+  return objects
+end
+
+--[[
 proto LevelManager:getDimensions()
 .D This function returns the number of columns and rows of the grid and the width (in pixels) and height (in pixels) of each cell.
 .R Returns the number of columns, the number of rows of the grid, the width (in pixels) and height (in pixels) of each cell.
@@ -658,14 +678,14 @@ end
 
 --[[
 proto LevelManager:getTileIdAtPos(Layer, Row, Col)
-.D This function returns the tile id at the given coordonate in the given layer.
+.D This function returns the tile id at the given grid coordonate in the given layer.
 .P Layer
 Layer to retreive the id.
 .P Row
 Row of the cell.
 .P Col
 Col of the cell.
-.R Returns the tile id at the given coordonate in the given layer.
+.R Returns the tile id at the given grid coordonate in the given layer.
 ]]--
 function LevelManager:getTileIdAtPos(Layer, Row, Col)
   if Layer ~= nil then
@@ -673,6 +693,27 @@ function LevelManager:getTileIdAtPos(Layer, Row, Col)
     local id = Layer.data[(Row-1) * mw + Col]
     return id or 0
   end
+end
+
+--[[
+proto LevelManager:getTileIdsAtCoord(X, Y) 
+.D This function returns the id of the tiles at the given position. The objects are excluded.
+.P X
+Position on the X-axis.
+.P Y
+Position on the Y-axis.
+.R Returns the id of all tiles at the given position. The objects are excluded.
+]]--
+function LevelManager:getTileIdsAtCoord(X, Y)
+  local ids = {}
+  local row, col = self:convertCoordToRowCol(X, Y)
+  for _,layer in ipairs(self.layers) do
+    local id = self:getTileIdAtPos(layer, row, col)
+    if id > 0 then
+      table.insert(ids, id)
+    end
+  end
+  return ids
 end
 
 --[[
