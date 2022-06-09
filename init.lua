@@ -1,9 +1,9 @@
 local Dina = {
   _TITLE       = 'Dina - Game Engine (c)',
-  _VERSION     = 'v3.1.0',
+  _VERSION     = 'v3.2.0',
   _URL         = 'https://dina.lacombedominique.com/',
   _LICENSE     = [[
-Copyright (c) 2019 LACOMBE Dominique
+Copyright (c) 2019-2022 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -16,14 +16,14 @@ Permission is granted to anyone to use this software for any purpose, including 
 local CurrentFile = (...):gsub("^(.*/+)", "")
 local CurrentFolder = (...):gsub('%/'..CurrentFile..'$', '')
 local EngineFolders = love.filesystem.getDirectoryItems(CurrentFolder)
-local FunctionsFolder = CurrentFolder.."/Functions"
+local UtilsFolder = CurrentFolder.."/Utils"
 
 -- Local functions
 local function InitializeGlobalFunctions()
-  local files = love.filesystem.getDirectoryItems(FunctionsFolder)
+  local files = love.filesystem.getDirectoryItems(UtilsFolder)
   for k, filename in ipairs(files) do
     local file = filename:gsub('%.lua$', '')
-    require(FunctionsFolder.."/"..file)
+    require(UtilsFolder.."/"..file)
   end
 end
 local function CreateComponent(Dina, ComponentType, ...)
@@ -108,7 +108,9 @@ proto Dina:update(dt)
 .P dt
 Delta time.
 ]]--
+local maxdt = 1/60
 function Dina:update(dt, WithState)
+  dt = math.min(dt, maxdt)
   local calculate = false
   if WithState == nil then
     WithState = true
@@ -283,11 +285,13 @@ Mode de gestion des touches : 'pressed', 'released' ou 'continuous'.
 Liste des touches devant déclencher l'exécution de la fonction (voir les tutoriels ou exemples pour plus de détails).
 ]]--
 function Dina:setActionKeys(Object, FctName, Mode, ...)
-  assert(self.controller ~= nil, "ERROR: loadController function must have been called before setting action keys.")
   assert(type(Object) == "table", "ERROR: invalid Object parameter.")
   assert(type(Object[FctName]) == "function", "ERROR: invalid FctName parameter.")
   Mode = string.lower(Mode)
   assert(Mode == "pressed" or Mode == "released" or Mode == "continuous", "ERROR: invalid Mode parameter; must be 'pressed', 'released' or 'continuous'.")
+  if self.controller == nil then
+    self:loadController()
+  end
   local UID = self.controller:associate(Object, FctName, Mode)
   self.controller:setActionKeys(UID, ...)
 end

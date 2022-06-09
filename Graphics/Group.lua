@@ -112,7 +112,12 @@ function Group:updateDimensions()
     if y == nil or cy < y then
       y = cy
     end
-    local cfx, cfy = component:getFlip()
+
+    local cfx = 1
+    local cfy = 1
+    if component.getFlip then
+      cfx, cfy = component:getFlip()
+    end
     local cfxv = cfx > 0 and 1 or 0
     if w == nil or w < cx + cw * cfxv then
       w = cx + cw * cfxv

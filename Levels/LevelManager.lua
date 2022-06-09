@@ -1,9 +1,9 @@
 local LevelManager = {
   _TITLE       = 'Dina Level Manager',
-  _VERSION     = '2.3',
+  _VERSION     = '2.5',
   _URL         = 'https://dina.lacombedominique.com/documentation/levels/levelmanager/',
   _LICENSE     = [[
-Copyright (c) 2019-2021 LACOMBE Dominique
+Copyright (c) 2019-2022 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -12,38 +12,32 @@ Permission is granted to anyone to use this software for any purpose, including 
     3. This notice may not be removed or altered from any source distribution.
 ]]
 }
+-- Public functions can be found at line 321
 
---[[
-proto LevelManager.new(ToDraw)
-.D This function create a new instance of LevelManager.
-.P ToDraw
-Indicate if the loaded level should be visible (true or nil) or not (false)
-.R Returns an instance of LevelManager.
-]]--
-function LevelManager.new(ToDraw)
-  local self = setmetatable({}, LevelManager)
-  self.file = {}
-  self.images = {}
-  self.squads = {}
-  self.layers = {}
-  self.objects = {}
-  self.tilesets = {}
-  self.tileids = {}
-  self.path = ""
-  self.updatecanvas = false
-  self.canvas = {}
-  self:setVisible(true)
-  self:setScale()
-  self:setOffset()
-  if ToDraw == false then
-    self:setVisible(false)
+--*************************************************************
+--* Private functions
+--*************************************************************
+local function FormatAbsolutePath(Path)
+  local posb, pose = string.find(Path, "%.%.")
+  while posb ~= nil do
+    local posdb, prevposdb
+    local posde = 0
+    while posdb ~= posb-1 do
+      prevposdb = posdb
+      posdb, posde = string.find(Path, "/", posde + 1)
+    end
+
+    if prevposdb == nil then
+      Path = string.sub(Path, (#Path - pose - 1) * -1)
+    else
+      local startpath = string.sub(Path,1 , prevposdb)
+      local endpath = string.sub(Path, (#Path - pose - 1) * -1)
+      Path = startpath .. endpath
+    end
+    posb, pose = string.find(Path, "%.%.")
   end
-  return self
+  return Path
 end
-
---*************************************************************
---* Loadings
---*************************************************************
 local function LoadTileset(LevelManager, Tileset)
   local ttw = Tileset.tilewidth
   local tth = Tileset.tileheight
@@ -52,19 +46,7 @@ local function LoadTileset(LevelManager, Tileset)
   local tm = Tileset.margin
   local ts = Tileset.spacing
   local sid = Tileset.firstgid
-  local path = LevelManager.path .. Tileset.image
-  while string.find(path, "%.%.") ~= nil do
-    path = string.sub(path, string.find(path, "%.%.") + 3)
-    local lmp = LevelManager.path
-    if string.find(lmp, "/", -1) then
-      lmp = string.sub(lmp, 1, #lmp - 1)
-    end
-    if string.find(lmp, "/") then
-      lmp = string.sub(lmp, 1, #lmp - string.find(string.reverse(lmp), "/") + 1)
-    end
-    LevelManager.path = lmp .. (string.find(lmp, "/", -1) and "" or "/")
-  end
-  path = LevelManager.path .. path
+  local path = FormatAbsolutePath(LevelManager.path .. Tileset.image)
   table.insert(LevelManager.images, love.graphics.newImage(path))
   table.insert(LevelManager.tilesets, Tileset)
   for i = 1, Tileset.tilecount do
@@ -134,10 +116,7 @@ local function LoadLayer(LevelManager, Layer)
     end
 
   elseif Layer.type == "imagelayer" then
-    local path = LevelManager.path..Layer.image
-    while string.find(path, "%.%.") ~= nil do
-      path = string.sub(path, string.find(path, "%.%.") + 3)
-    end
+    local path = FormatAbsolutePath(LevelManager.path..Layer.image)
     table.insert(LevelManager.images, love.graphics.newImage(path))
     Layer.numImg = #LevelManager.images
     table.insert(LevelManager.layers, Layer)
@@ -149,35 +128,6 @@ local function LoadLayer(LevelManager, Layer)
     LoadObjects(LevelManager, Layer)
   end
 end
---[[
-proto LevelManager:load(File)
-.D This function loads a given map file.
-.P File
-Path and name of the map to load.
-]]--
-function LevelManager:load(File)
-  self.file = require(File)
-  local fname = File:gsub("^(.*/+)", "")
-  if File == fname then
-    self.path = ""
-  else
-    self.path = File:gsub('%/'..fname..'$', '') .. "/"
-  end
-
-  for i = 1, #self.file.tilesets do
-    LoadTileset(self, self.file.tilesets[i])
-  end
-
-  for i = 1, #self.file.layers do
-    LoadLayer(self, self.file.layers[i])
-  end
-  self.canvas = love.graphics.newCanvas(self.file.width * self.file.tilewidth, self.file.height * self.file.tileheight)
-end
-
---*************************************************************
---* Drawings
---*************************************************************
--- Internal function
 local function GetRotation(pNum)
   local FLIPH = 0x80000000
   local FLIPV = 0x40000000
@@ -221,15 +171,12 @@ local function GetRotation(pNum)
   end
   return numTile, r, sx, sy
 end
-
 local function IsDrawable(Item)
   return Item.visible == true and Item.opacity > 0
 end
 local function IsValidImgId(LevelManager, ImgId)
   return LevelManager.tileids[ImgId] and true or false
 end
-
-
 local function DrawLayer(LevelManager, Layer)
   if not IsDrawable(Layer) then
     return
@@ -240,7 +187,6 @@ local function DrawLayer(LevelManager, Layer)
   local offsetY = Layer.offsety * lmsy
   local x = 0
   local y = 0
-
   love.graphics.setColor(1,1,1,Layer.opacity)
   for row = 1, h do
     for col = 1, w do
@@ -346,13 +292,101 @@ local function DrawObject(LevelManager, Object)
     DrawObjectForm(LevelManager, Object, Object.opacity)
   end
 end
+local function GetAllObjectsBy(LevelManager, Type, Value)
+  local objects = {}
+  for i = 1, #LevelManager.objects do
+    local object = LevelManager.objects[i]
+    if object[Type] == Value then
+      table.insert(objects, object)
+    end
+  end
+  return objects
+end
+local function BackupLayerDatas(Layer)
+  if type(Layer.data) ~= "table" then
+    return
+  end
+  Layer.originalData = {}
+  setmetatable(Layer.originalData, getmetatable(Layer.data))
+  for k,v in pairs(Layer.data) do
+    Layer.originalData[k] = v
+  end
+  print("Backup finished")
+end
+local function RestoreTableFrom(Data)
+  local t = {}
+  for k,v in pairs(Data) do
+    if type(v) == "table" then
+      t[k] = RestoreTableFrom(v)
+    else
+      t[k] = v
+    end
+  end
+  return t
+end
+local function RestoreLayerDatas(Layer)
+  if Layer.originalData == nil then
+    return
+  end
+  Layer.data = RestoreTableFrom(Layer.originalData)
+  Layer.originalData = nil
+end
+
+--*************************************************************
+--* Public functions
+--*************************************************************
 --[[
-proto LevelManager:draw(OffsetX, OffsetY, ScaleX, ScaleY)
-.D This function draws the map with a given offset and scale.
-.P OffsetX
-.P OffsetY
-.P ScaleX
-.P ScaleY
+proto LevelManager.new()
+.D This function create a new instance of LevelManager.
+.R Returns an instance of LevelManager.
+]]--
+function LevelManager.new()
+  local self = setmetatable({}, LevelManager)
+  self.file = {}
+  self.images = {}
+  self.squads = {}
+  self.layers = {}
+  self.objects = {}
+  self.tilesets = {}
+  self.tileids = {}
+  self.path = ""
+  self.updatecanvas = false
+  self.canvas = {}
+  self:setVisible(true)
+  self:setScale()
+  self:setOffset()
+  return self
+end
+
+--[[
+proto LevelManager:load(File)
+.D This function loads a given map file.
+.P File
+Path and name of the map to load.
+]]--
+function LevelManager:load(File)
+  self.file = require(File)
+  local fname = File:gsub("^(.*/+)", "")
+  if File == fname then
+    self.path = ""
+  else
+    self.path = File:gsub('%/'..fname..'$', '') .. "/"
+  end
+
+  for i = 1, #self.file.tilesets do
+    LoadTileset(self, self.file.tilesets[i])
+  end
+
+  for i = 1, #self.file.layers do
+    LoadLayer(self, self.file.layers[i])
+  end
+  self.canvas = love.graphics.newCanvas(self.file.width * self.file.tilewidth, self.file.height * self.file.tileheight)
+end
+
+
+--[[
+proto LevelManager:draw()
+.D This function draws the map.
 ]]--
 function LevelManager:draw()
   if self.visible then
@@ -371,6 +405,7 @@ function LevelManager:draw()
       local drawWidth = self.file.width * self.file.tilewidth * lmsx
       local drawHeight = self.file.height * self.file.tileheight * lmsy
       if drawWidth ~= self.canvas:getWidth() or drawHeight ~= self.canvas:getHeight() then
+		self.canvas = nil
         self.canvas = love.graphics.newCanvas(drawWidth, drawHeight)
         self.updatecanvas = true
       end
@@ -398,9 +433,6 @@ function LevelManager:draw()
   end
 end
 
---*************************************************************
---* Opacity
---*************************************************************
 --[[
 proto LevelManager:getOpacity(Item)
 .D This function returns the opacity of a given item (layer or object).
@@ -411,6 +443,7 @@ Item (layer or object) to get the opacity.
 function LevelManager:getOpacity(Item)
   return Item.opacity or 0
 end
+
 --[[
 proto LevelManager:setOpacity(Item, Alpha)
 .D This function set the opacity of the given item (layer or object).
@@ -435,6 +468,7 @@ function LevelManager:setOpacity(Item, Alpha)
     end
   end
 end
+
 --[[
 proto LevelManager:restoreOpacity(Item)
 .D This function restores the opacity of the given item (layer or object).
@@ -447,6 +481,7 @@ function LevelManager:restoreOpacity(Item)
     Item.opacity = Item.originalOpacity
   end
 end
+
 --[[
 proto LevelManager:setAllOpacity(Opacity)
 .D This function sets the opacity of all layers and objects to the given value.
@@ -461,6 +496,7 @@ function LevelManager:setAllOpacity(Opacity)
     self:setOpacity(v, Opacity)
   end
 end
+
 --[[
 proto LevelManager:restoreAllOpacity()
 .D This function restores the opacity of all layers and objects.
@@ -473,9 +509,8 @@ function LevelManager:restoreAllOpacity()
     self:restoreOpacity(v)
   end
 end
---*************************************************************
---* Retreivings
---*************************************************************
+
+
 --[[
 proto LevelManager:getLayerByName(Name)
 .D This function returns a layer found by its name. Do not work with a name of a group.
@@ -492,6 +527,7 @@ function LevelManager:getLayerByName(Name)
   end
   return nil
 end
+
 --[[
 proto LevelManager:getLayersByGroup(GroupName)
 .D This function returns all layers of a group found by its name.
@@ -509,6 +545,7 @@ function LevelManager:getLayersByGroup(GroupName)
   end
   return layerGroup
 end
+
 --[[
 proto LevelManager:getObjectByName(Name)
 .D This function returns an object found by its name.
@@ -526,16 +563,6 @@ function LevelManager:getObjectByName(Name)
   return nil
 end
 
-local function GetAllObjectsBy(LevelManager, Type, Value)
-  local objects = {}
-  for i = 1, #LevelManager.objects do
-    local object = LevelManager.objects[i]
-    if object[Type] == Value then
-      table.insert(objects, object)
-    end
-  end
-  return objects
-end
 --[[
 proto LevelManager:getAllObjectsByType(Type)
 .D This function is a shortcut to retreive all objects of the given type.
@@ -546,9 +573,10 @@ Type of object to retreive.
 function LevelManager:getAllObjectsByType(Type)
   return GetAllObjectsBy(self, "type", Type)
 end
+
 --[[
 proto LevelManager:getAllObjectsByShape(Shape)
-.D This function is a shortcu to retreive all objects of the given shape.
+.D This function is a shortcut to retreive all objects of the given shape.
 .P Shape
 Shape of object to retreive.
 .R Returns all objects of the given shape.
@@ -556,6 +584,7 @@ Shape of object to retreive.
 function LevelManager:getAllObjectsByShape(Shape)
   return GetAllObjectsBy(self, "shape", Shape)
 end
+
 --[[
 proto LevelManager:getObjectsInGroup(GroupName)
 .D This function returns all objects of a group retreived by the given name.
@@ -573,6 +602,7 @@ function LevelManager:getObjectsInGroup(GroupName)
   end
   return objects
 end
+
 --[[
 proto LevelManager:getObjectsOnGrid(Row, Col)
 .D This function returns all objects at the given cell coordonates. Row and Col should be inside the grid.
@@ -602,9 +632,30 @@ function LevelManager:getDimensions()
   return self.file.width, self.file.height, self.file.tilewidth, self.file.tileheight
 end
 
---*************************************************************
---* Utils
---*************************************************************
+--[[
+proto LevelManager:getMapDimensions()
+.D This function returns the width and height in pixels of the map with the scale.
+.R Returns returns the width and height in pixels of the map with the scale.
+]]--
+function LevelManager:getMapDimensions()
+  return self.file.width * self.file.tilewidth * self.scalex, self.file.height * self.file.tileheight * self.scaley
+end
+
+--[[
+proto LevelManager:centerMap(X, Y)
+.D This function center the map on the given coordonates.
+.P X
+Position on the X-axis.
+.P Y
+Position on the Y-axis.
+]]--
+function LevelManager:centerMap(X, Y)
+  local mapWidth, mapHeight = LevelManager:getMapDimensions()
+  local offsetX = (mapWidth - X) / 2
+  local offsetY = (mapHeight - Y) / 2
+  self:setOffset(offsetX, offsetY)
+end
+
 --[[
 proto LevelManager:getTileIdAtPos(Layer, Row, Col)
 .D This function returns the tile id at the given coordonate in the given layer.
@@ -621,25 +672,6 @@ function LevelManager:getTileIdAtPos(Layer, Row, Col)
     local mw, _ = self:getDimensions()
     local id = Layer.data[(Row-1) * mw + Col]
     return id or 0
-  end
-end
-
-local function BackupLayerDatas(Layer)
-  if type(Layer.data) ~= "table" then
-    return
-  end
-  Layer.originalData = {}
-  setmetatable(Layer.originalData, getmetatable(Layer.data))
-  for k,v in pairs(Layer.data) do
-    Layer.originalData[k] = v
-  end
-end
-local function RestoreLayerDatas(Layer)
-  if Layer.originalData == nil then
-    return
-  end
-  for k,v in pairs(Layer.originalData) do
-    Layer.data[k] = v
   end
 end
 
@@ -669,6 +701,7 @@ function LevelManager:setTileIdAtPos(Layer, Row, Col, ImgId, Force)
     self.updatecanvas = true
   end
 end
+
 --[[
 proto LevelManager:restoreTileIdAtPos(Layer, Row, Col)
 .D This function restores the tile id at the given cell coordonate on the given layer.
@@ -684,6 +717,7 @@ function LevelManager:restoreTileIdAtPos(Layer, Row, Col)
   Layer.data[posTile] = Layer.originalData[posTile]
   self.updatecanvas = true
 end
+
 --[[
 proto LevelManager:setImageId(Object, ImgId)
 .D This function sets the image id of the given object by the given image id if the image id is valid.
@@ -698,6 +732,7 @@ function LevelManager:setImageId(Item, ImgId)
     self.updatecanvas = true
   end
 end
+
 --[[
 proto LevelManager:restoreObjectImageId(Object)
 .D This function restores the image id of the given object.
@@ -723,6 +758,7 @@ function LevelManager:setOffset(OffsetX, OffsetY)
   self.offsetx = OffsetX or 0
   self.offsety = OffsetY or 0
 end
+
 --[[
 proto LevelManager:getOffset()
 .D This function returns the offsets.
@@ -731,6 +767,7 @@ proto LevelManager:getOffset()
 function LevelManager:getOffset()
   return self.offsetx, self.offsety
 end
+
 --[[
 proto LevelManager:setScale(ScaleX, ScaleY)
 .D This function sets the scales.
@@ -743,6 +780,7 @@ function LevelManager:setScale(ScaleX, ScaleY)
   self.scalex = ScaleX or 1
   self.scaley = ScaleY or 1
 end
+
 --[[
 proto LevelManager:getScale()
 .D This function returns the scale.
@@ -759,6 +797,7 @@ proto LevelManager:setVisible(Visible)
 function LevelManager:setVisible(Visible)
   self.visible = Visible == true and true or false
 end
+
 --[[
 proto LevelManager:getVisible()
 .D This function returns if the level is visible (true) or not (false).
@@ -786,6 +825,7 @@ function LevelManager:convertRowColToCoord(Row, Col)
   local y = (Row - 1) * th
   return x, y
 end
+
 --[[
 proto LevelManager:convertCoordToRowCol(X, Y)
 .D This function converts a X,Y coordonate to cell coordonate.
@@ -807,6 +847,7 @@ function LevelManager:convertCoordToRowCol(X, Y)
   end
   return row, col
 end
+
 --[[
 proto LevelManager:reload()
 .D This function reloads all datas of all layers and objects.
@@ -857,9 +898,14 @@ function LevelManager:toString(NoTitle)
   end
   return str
 end
+
+
+
 -- System functions
 LevelManager.__tostring = function(LevelManager, NoTitle) return LevelManager:toString(NoTitle) end
 LevelManager.__index = LevelManager
 LevelManager.__name = "LevelManager"
+
+--LevelManager = LevelManager.new()
 
 return LevelManager

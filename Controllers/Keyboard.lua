@@ -26,7 +26,6 @@ local function hook_love_events(self)
   end
 end
 
--- TODO: help
 function Keyboard.new()
   local self = setmetatable(Parent.new(), Keyboard)
   self.key_state = {}
@@ -34,7 +33,6 @@ function Keyboard.new()
   return self
 end
 
--- TODO: help
 function Keyboard:update(dt)
   for key, _ in pairs(self.key_state) do
     self.key_state[key] = nil
@@ -42,7 +40,7 @@ function Keyboard:update(dt)
 end
 
 function Keyboard:key_down(key)
-  if key == "all" then
+  if string.lower(key) == "all" then
     for _,state in pairs(self.key_state) do
       if state then
         return true, 1
@@ -54,7 +52,7 @@ function Keyboard:key_down(key)
 end
 
 function Keyboard:key_up(key)
-  if key == "all" then
+  if string.lower(key) == "all" then
     for _,state in pairs(self.key_state) do
       if state == false then
         return true, 1
@@ -65,8 +63,8 @@ function Keyboard:key_up(key)
   return self.key_state[key] == false, 1
 end
 
-function Keyboard:key(Key)
-  if Key == "all" then
+function Keyboard:key(key)
+  if string.lower(key) == "all" then
     for _,state in pairs(self.key_state) do
       if state or state == false then
         return true, 1
@@ -74,7 +72,7 @@ function Keyboard:key(Key)
     end
     return false, 1
   end
-  return love.keyboard.isDown(Key), 1
+  return love.keyboard.isDown(key), 1
 end
 
 -- System functions

@@ -31,6 +31,8 @@ function Controller.new()
   Dina:removeComponent(self.keyboard)
   self.gamepad = Dina("Gamepad")
   Dina:removeComponent(self.gamepad)
+  self.mouse = Dina("Mouse")
+  Dina:removeComponent(self.mouse)
   self.actions = {}
   self.objassoc = {}
   return self
@@ -39,8 +41,8 @@ end
 function Controller:setActionKeys(UID, Key, ...)
   assert(UID ~= nil and UID ~= "", "ERROR: UID parameter must be filled.")
   assert(type(Key) == "table", "ERROR: the Key parameter must be a table.")
-  assert(string.lower(Key[1]) == "keyboard" or string.lower(Key[1]) == "gamepad", 
-         "ERROR: the first value in the Key parameter must be 'keyboard' or 'gamepad'")
+  assert(string.lower(Key[1]) == "keyboard" or string.lower(Key[1]) == "gamepad" or string.lower(Key[1]) == "mouse", 
+    "ERROR: the first value in the Key parameter must be 'keyboard' , 'gamepad' or 'mouse'")
   if not self.actions[UID].Keys then
     self.actions[UID].Keys = {}
   end
@@ -81,11 +83,11 @@ end
 function Controller:associate(Object, FctName, State)
   State = string.lower(State)
   assert(State == "pressed" or State == "released" or State == "continuous",
-         "ERROR: State must be 'pressed', 'released' or 'continuous'.")
+    "ERROR: State must be 'pressed', 'released' or 'continuous'.")
   assert(type(Object) == "table", "ERROR: Object must be a table.")
   local fct = Object[FctName]
   assert(type(fct) == "function", "ERROR: '"..FctName.."' must refer to the name of a function.")
-  
+
   local objId = GetObjectId(Object)
   local UID = objId .. "_" .. FctName
   self.actions[UID] = {}
@@ -93,7 +95,7 @@ function Controller:associate(Object, FctName, State)
   self.actions[UID].Object = Object
   self.actions[UID].FctName = FctName
   self.actions[UID].State = State
-  
+
   if not self.objassoc[objId] then
     local joyId = GetNextJoystickId(self)
     self.objassoc[objId] = joyId
@@ -123,7 +125,7 @@ function Controller:update(dt)
         else
           res, dir = self.keyboard:key(k.key)
         end
-      else
+      elseif k.ctl == "gamepad" then
         local joyId = self.objassoc[action.ObjectId]
         if joyId then
           if action.State == "pressed" then

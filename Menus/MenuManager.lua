@@ -1,7 +1,7 @@
 local MenuManager = {
   _TITLE       = 'Dina Game Engine - Menu Manager',
   _VERSION     = '3.1.2',
-  _URL         = 'https://dina.lacombedominique.com/documentation/gui/menumanager/',
+  _URL         = 'https://dina.lacombedominique.com/documentation/menus/menumanager/',
   _LICENSE     = [[
 Copyright (c) 2019 LACOMBE Dominique
 ZLIB Licence
@@ -17,6 +17,29 @@ Permission is granted to anyone to use this software for any purpose, including 
 local Dina = require("Dina")
 local Parent = Dina:require("Manager")
 setmetatable(MenuManager, {__index = Parent})
+
+-- Locale functions
+local function CenterItem(item)
+  local _, iy = item:getPosition()
+  local itw = item:getTextDimensions()
+  local ix = (Dina.width - itw)/2
+  item:setPosition(ix, iy)
+end
+local function SearchItemIdCollideWithMouse(MenuManager, mousePos)
+  for i = 1, #MenuManager.items do
+    local item = MenuManager.items[i]
+    local ix, iy = item:getPosition()
+    local iw, ih = item:getDimensions()
+    if mousePos.x == nil or mousePos.y == nil or ix == nil or iy == nil or iw == nil or ih == nil then
+      print("error", mousePos.x,mousePos.y,ix,iy,iw,ih)
+    end
+    if CollidePointRect(mousePos.x, mousePos.y, ix, iy, iw, ih) then
+      return i
+    end
+  end
+  return 0
+end
+--
 
 --[[
 proto const MenuManager.new()
@@ -42,7 +65,7 @@ function MenuManager:setNextKeys(...)
   if (...) then
     Dina:setActionKeys(self, "nextItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "nextItem", "pressed", {"Keyboard", "down"}, {"Gamepad", "lefty", 1})
+    Dina:setActionKeys(self, "nextItem", "pressed", {"Keyboard", "down"}, {"Gamepad", "lefty", 1}, {"Mouse", "wheel_down"}, {"Mouse", "moved"})
   end
 end
 
@@ -50,7 +73,7 @@ function MenuManager:setPreviousKeys(...)
   if (...) then
     Dina:setActionKeys(self, "previousItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "previousItem", "pressed", {"Keyboard", "up"}, {"Gamepad", "lefty", -1})
+    Dina:setActionKeys(self, "previousItem", "pressed", {"Keyboard", "up"}, {"Gamepad", "lefty", -1}, {"Mouse", "wheel_up"}, {"Mouse", "moved"})
   end
 end
 
@@ -58,7 +81,7 @@ function MenuManager:setValidateKeys(...)
   if (...) then
     Dina:setActionKeys(self, "validateItem", "pressed", ...)
   else
-    Dina:setActionKeys(self, "validateItem", "pressed", {"Keyboard", "space"}, {"Gamepad", "a"})
+    Dina:setActionKeys(self, "validateItem", "pressed", {"Keyboard", "space"}, {"Gamepad", "a"}, {"Mouse", "button_1"})
   end
 end
 
@@ -82,7 +105,7 @@ function MenuManager:addImage(ImageName, X, Y, CenterOrigin)
 end
 
 --[[
-proto MenuManager:setTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
+proto MenuManager:addTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
 .D Cette fonction permet d'ajouter un titre au menu
 .P Title
 Titre du jeu
@@ -103,13 +126,13 @@ Décalage de l'ombre en pixels sur l'axe des X.
 .P ShadowOffsetY
 Décalage de l'ombre en pixels sur l'axe des Y. Si non renseigné, on utilise celui de l'axe X.
 ]]--
-function MenuManager:setTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
-  self.titletext = Dina("Text", Title)
-  self.titletext:setTextColor(TitleColor)
-  self.titletext:setFont(FontName, FontSize)
-  self.titletext:setZOrder(50)
-  local x = (Dina.width - self.titletext:getTextWidth()) / 2
-  self.titletext:setPosition(x, Y)
+function MenuManager:addTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
+  local titletext = Dina("Text", Title)
+  titletext:setTextColor(TitleColor)
+  titletext:setFont(FontName, FontSize)
+  titletext:setZOrder(50)
+  local x = (Dina.width - titletext:getTextWidth()) / 2
+  titletext:setPosition(x, Y)
   if ShadowOffsetX == nil then
     ShadowOffsetX = 0
   end
@@ -118,22 +141,15 @@ function MenuManager:setTitle(Title, Y, FontName, FontSize, TitleColor, WithShad
   end
 
   if WithShadow and ShadowOffsetX ~= 0 and ShadowOffsetY ~= 0 then
-    self.shadowtext = Dina("Text", Title, x + ShadowOffsetX, Y + ShadowOffsetY)
-    self.shadowtext:setTextColor(ShadowColor)
-    self.shadowtext:setFont(FontName, FontSize)
-    self.shadowtext:setZOrder(45)
+    local shadowtext = Dina("Text", Title, x + ShadowOffsetX, Y + ShadowOffsetY)
+    shadowtext:setTextColor(ShadowColor)
+    shadowtext:setFont(FontName, FontSize)
+    shadowtext:setZOrder(45)
   end
 end
 
 function MenuManager:setCtrlSpace(Value)
   self.ctrlspace = SetDefaultNumber(Value, 0)
-end
-
-local function CenterItem(item)
-  local _, iy = item:getPosition()
-  local itw = item:getTextDimensions()
-  local ix = (Dina.width - itw)/2
-  item:setPosition(ix, iy)
 end
 
 
@@ -184,50 +200,59 @@ proto MenuManager:nextItem()
 function MenuManager:nextItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
-    if item.ondeselection then
-      item.ondeselection(item)
+    if item then
+        if item.ondeselection then
+        item.ondeselection(item)
+        end
+        CenterItem(item)
     end
-    CenterItem(item)
   end
   self.currentitem = self.currentitem + 1
   if self.currentitem > #self.items then
     self.currentitem = 1
   end
   local item = self.items[self.currentitem]
-  if item.onselection then
-    item.onselection(item)
+  if item then
+    if item.onselection then
+      item.onselection(item)
+    end
+    CenterItem(item)
   end
-  CenterItem(item)
 end
 
 function MenuManager:previousItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
-    if item.ondeselection then
-      item.ondeselection(item)
+    if item then
+        if item.ondeselection then
+        item.ondeselection(item)
+        end
+        CenterItem(item)
     end
-    CenterItem(item)
   end
   self.currentitem = self.currentitem - 1
   if self.currentitem < 1 then
     self.currentitem = #self.items
   end
   local item = self.items[self.currentitem]
-  if item.onselection then
-    item.onselection(item)
+  if item then
+    if item.onselection then
+      item.onselection(item)
+    end
+    CenterItem(item)
   end
-  CenterItem(item)
 end
 
 function MenuManager:validateItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
-    if item.onvalidation then
-      item.onvalidation(item)
+    if item then
+      if item.onvalidation then
+        item.onvalidation(item)
+      end
     end
   end
 end
-
 
 -- Fonction système
 function MenuManager:toString(NoTitle)

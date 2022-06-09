@@ -34,7 +34,7 @@ Position de la conversation courante.
 local DialogManager = {
   _TITLE       = 'Dina Game Engine - Dialog Manager',
   _VERSION     = '3.1.6',
-  _URL         = 'https://dina.lacombedominique.com/documentation/gui/dialogmanager/',
+  _URL         = 'https://dina.lacombedominique.com/documentation/dialogs/dialogmanager/',
   _LICENSE     = [[
 Copyright (c) 2019 LACOMBE Dominique
 ZLIB Licence
