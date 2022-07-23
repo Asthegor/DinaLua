@@ -41,9 +41,9 @@ end
 
 function Keyboard:key_down(key)
   if string.lower(key) == "all" then
-    for _,state in pairs(self.key_state) do
+    for k,state in pairs(self.key_state) do
       if state then
-        return true, 1
+        return true, 1, k
       end
     end
     return false, 1
@@ -53,9 +53,9 @@ end
 
 function Keyboard:key_up(key)
   if string.lower(key) == "all" then
-    for _,state in pairs(self.key_state) do
+    for k,state in pairs(self.key_state) do
       if state == false then
-        return true, 1
+        return true, 1, k
       end
     end
     return false, 1
@@ -65,9 +65,9 @@ end
 
 function Keyboard:key(key)
   if string.lower(key) == "all" then
-    for _,state in pairs(self.key_state) do
+    for k,state in pairs(self.key_state) do
       if state or state == false then
-        return true, 1
+        return true, 1, k
       end
     end
     return false, 1

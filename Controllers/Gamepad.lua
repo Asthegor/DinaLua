@@ -75,9 +75,16 @@ function Gamepad:button_down(JoystickId, Button, Direction)
     return false, 0
   end
   if string.lower(Button) == "all" then
-    for _, state in pairs(self.states[JoystickId]) do
+    for b, state in pairs(self.states[JoystickId]) do
       if state then
-        return true, 1
+        local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, b)
+        if pcall_res then
+          if value < 0 then value = -1 end
+          if value > 0 then value = 1 end
+        else
+          value = 1
+        end
+        return true, value, b
       end
     end
   end
@@ -108,9 +115,16 @@ function Gamepad:button_up(JoystickId, Button, Direction)
     return false, 0
   end
   if string.lower(Button) == "all" then
-    for _, state in pairs(self.states[JoystickId]) do
+    for b, state in pairs(self.states[JoystickId]) do
       if state == false then
-        return true, 1
+        local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, b)
+        if pcall_res then
+          if value < 0 then value = -1 end
+          if value > 0 then value = 1 end
+        else
+          value = 1
+        end
+        return true, value, b
       end
     end
   end
@@ -137,9 +151,16 @@ function Gamepad:button(JoystickId, Button, Direction)
     return false, 0
   end
   if string.lower(Button) == "all" then
-    for _, btn in pairs(self.states[JoystickId]) do
+    for b, btn in pairs(self.states[JoystickId]) do
       if btn then
-        return true, 1
+        local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, b)
+        if pcall_res then
+          if value < 0 then value = -1 end
+          if value > 0 then value = 1 end
+        else
+          value = 1
+        end
+        return true, value, b
       end
     end
     return false, 0

@@ -1,6 +1,6 @@
 local LevelManager = {
   _TITLE       = 'Dina Level Manager',
-  _VERSION     = '2.5',
+  _VERSION     = '2.6',
   _URL         = 'https://dina.lacombedominique.com/documentation/levels/levelmanager/',
   _LICENSE     = [[
 Copyright (c) 2019-2022 LACOMBE Dominique
@@ -12,7 +12,7 @@ Permission is granted to anyone to use this software for any purpose, including 
     3. This notice may not be removed or altered from any source distribution.
 ]]
 }
--- Public functions can be found at line 321
+-- Public functions can be found at line 338
 
 --*************************************************************
 --* Private functions
@@ -26,7 +26,6 @@ local function FormatAbsolutePath(Path)
       prevposdb = posdb
       posdb, posde = string.find(Path, "/", posde + 1)
     end
-
     if prevposdb == nil then
       Path = string.sub(Path, (#Path - pose - 1) * -1)
     else
@@ -243,7 +242,7 @@ local function DrawImage(LevelManager, Layer)
   love.graphics.draw(image, x, y, 0, lmsx, lmsy)
   love.graphics.setColor(1,1,1,1)
 end
-local function DrawObjectTile(LevelManager, Object, Alpha)
+local function DrawObjectTile(LevelManager, Object, Alpha, OffsetX, OffsetY)
   local numTile, r, sx, sy = GetRotation(Object.gid)
   if numTile > 0 then
     local numimg = LevelManager.squads[numTile].numimg
@@ -275,28 +274,30 @@ local function DrawObjectTile(LevelManager, Object, Alpha)
       r = math.rad(ro)
     end
     love.graphics.setColor(1,1,1,Alpha)
-    love.graphics.draw(image, quad, x, y, r, sx * lmsx, sy * lmsy, ox, oy)
+    love.graphics.draw(image, quad, x + OffsetX, y + OffsetY, r, sx * lmsx, sy * lmsy, ox, oy)
     love.graphics.setColor(1,1,1,1)
   end
 end
-local function DrawObjectForm(LevelManager, Object, Alpha)
+local function DrawObjectForm(LevelManager, Object, Alpha, OffsetX, OffsetY)
   -- Nothing to draw
 end
-local function DrawObject(LevelManager, Object)
+local function DrawObject(LevelManager, Object, OffsetX, OffsetY)
+  if OffsetX == nil then OffsetX = 0 end
+  if OffsetY == nil then OffsetY = 0 end
   if not IsDrawable(Object) then
     return
   end
   if Object.gid ~= nil then
-    DrawObjectTile(LevelManager, Object, Object.opacity)
+    DrawObjectTile(LevelManager, Object, Object.opacity, OffsetX, OffsetY)
   else
-    DrawObjectForm(LevelManager, Object, Object.opacity)
+    DrawObjectForm(LevelManager, Object, Object.opacity, OffsetX, OffsetY)
   end
 end
-local function GetAllObjectsBy(LevelManager, Type, Value)
+local function GetAllObjectsBy(LevelManager, Class, Value)
   local objects = {}
   for i = 1, #LevelManager.objects do
     local object = LevelManager.objects[i]
-    if object[Type] == Value then
+    if object[Class] == Value then
       table.insert(objects, object)
     end
   end
@@ -405,7 +406,7 @@ function LevelManager:draw()
       local drawWidth = self.file.width * self.file.tilewidth * lmsx
       local drawHeight = self.file.height * self.file.tileheight * lmsy
       if drawWidth ~= self.canvas:getWidth() or drawHeight ~= self.canvas:getHeight() then
-		self.canvas = nil
+        self.canvas = nil
         self.canvas = love.graphics.newCanvas(drawWidth, drawHeight)
         self.updatecanvas = true
       end
@@ -422,16 +423,18 @@ function LevelManager:draw()
           DrawImage(self, layer)
         end
       end
-      -- Affichage des objets
-      for i = 1, #self.objects do
-        DrawObject(self, self.objects[i])
-      end
       love.graphics.setCanvas()
     end
+    -- Affichage du canvas qui contient les calques de tuiles et d'images
     love.graphics.draw(self.canvas, lmox * -1, lmoy * -1)
+    -- Affichage des objets
+    for i = 1, #self.objects do
+      DrawObject(self, self.objects[i], lmox * -1, lmoy * -1)
+    end
     self.updatecanvas = false
   end
 end
+
 
 --[[
 proto LevelManager:getOpacity(Item)
@@ -445,22 +448,22 @@ function LevelManager:getOpacity(Item)
 end
 
 --[[
-proto LevelManager:setOpacity(Item, Alpha)
+proto LevelManager:setOpacity(Item, Opacity)
 .D This function set the opacity of the given item (layer or object).
 .P Item
 Item (layer or object) on which the opacity is modified.
-.P Alpha
+.P Opacity
 New value of opacity to apply.
 ]]--
-function LevelManager:setOpacity(Item, Alpha)
+function LevelManager:setOpacity(Item, Opacity)
   if Item ~= nil then
     if Item.originalOpacity == nil then
-      if Item.originalOpacity ~= Item.opacity then
-        self.updatecanvas = true
-      end
       Item.originalOpacity = Item.opacity
     end
-    Item.opacity = Alpha
+    if Item.opacity ~= Opacity then
+      self.updatecanvas = true
+    end
+    Item.opacity = Opacity
     if Item.opacity > 1 then
       Item.opacity = 1
     elseif Item.opacity < 0 then
@@ -502,11 +505,11 @@ proto LevelManager:restoreAllOpacity()
 .D This function restores the opacity of all layers and objects.
 ]]--
 function LevelManager:restoreAllOpacity()
-  for _,v in ipairs(self.layers) do
-    self:restoreOpacity(v)
+  for _,layer in ipairs(self.layers) do
+    self:restoreOpacity(layer)
   end
-  for _,v in ipairs(self.objects) do
-    self:restoreOpacity(v)
+  for _,object in ipairs(self.objects) do
+    self:restoreOpacity(object)
   end
 end
 
@@ -564,14 +567,14 @@ function LevelManager:getObjectByName(Name)
 end
 
 --[[
-proto LevelManager:getAllObjectsByType(Type)
-.D This function is a shortcut to retreive all objects of the given type.
-.P Type
-Type of object to retreive.
-.R Returns all objects of the given type.
+proto LevelManager:getAllObjectsByClass(Class)
+.D This function is a shortcut to retreive all objects of the given class.
+.P Class
+class of object to retreive.
+.R Returns all objects of the given class.
 ]]--
-function LevelManager:getAllObjectsByType(Type)
-  return GetAllObjectsBy(self, "type", Type)
+function LevelManager:getAllObjectsByClass(Class)
+  return GetAllObjectsBy(self, "class", Class)
 end
 
 --[[
@@ -671,8 +674,8 @@ Position on the Y-axis.
 ]]--
 function LevelManager:centerMap(X, Y)
   local mapWidth, mapHeight = LevelManager:getMapDimensions()
-  local offsetX = (mapWidth - X) / 2
-  local offsetY = (mapHeight - Y) / 2
+  local offsetX = mapWidth/2 - X
+  local offsetY = mapHeight/2 - Y
   self:setOffset(offsetX, offsetY)
 end
 
@@ -760,6 +763,15 @@ function LevelManager:restoreTileIdAtPos(Layer, Row, Col)
 end
 
 --[[
+proto LevelManager:getImageId(Object)
+.D This function gets the image id of the given object.
+.P Object
+Object to set the image.
+]]--
+function LevelManager:getImageId(Object)
+  return Object.gid
+end
+--[[
 proto LevelManager:setImageId(Object, ImgId)
 .D This function sets the image id of the given object by the given image id if the image id is valid.
 .P Object
@@ -767,10 +779,9 @@ Object to set the image.
 .P ImgId
 New image id for the object.
 ]]--
-function LevelManager:setImageId(Item, ImgId)
+function LevelManager:setImageId(Object, ImgId)
   if IsValidImgId(self, ImgId) then
-    Item.gid = ImgId
-    self.updatecanvas = true
+    Object.gid = ImgId
   end
 end
 
@@ -783,7 +794,6 @@ Object to restore.
 function LevelManager:restoreImageId(Object)
   if Object.originalGid ~= nil then
     Object.gid = Object.originalGid
-    self.updatecanvas = true
   end
 end
 
@@ -903,18 +913,27 @@ function LevelManager:reload()
 end
 
 --[[
-proto LevelManager:resetObjects()
+proto LevelManager:restoreObject(Object)
+.D This function restore the given object at its original values.
+.P Object
+Object to be restored.
+]]--
+function LevelManager:restoreObject(Object)
+  Object.x = Object.originalX or 0
+  Object.y = Object.originalY or 0
+  Object.row = Object.originalRow or 0
+  Object.col = Object.originalCol or 0
+  self:restoreImageId(Object)
+  self:restoreOpacity(Object)
+end
+
+--[[
+proto LevelManager:restoreObjects()
 .D This function restore all objects at their original values.
 ]]--
-function LevelManager:resetObjects()
+function LevelManager:restoreObjects()
   for i = 1, #self.objects do
-    local object = self.objects[i]
-    object.x = object.originalX or 0
-    object.y = object.originalY or 0
-    object.row = object.originalRow or 0
-    object.col = object.originalCol or 0
-    self:restoreObjectImageId(object)
-    self:restoreOpacity(object)
+    self:restoreObject(self.objects[i])
   end
 end
 

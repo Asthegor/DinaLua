@@ -47,7 +47,7 @@ Z-Order of the button.
 .R Return an instance of Button object.
 ]]--
 function Button.new(X, Y, Width, Height, Content, FontName, FontSize, TextColor, BackColor, Z)
-  local self = setmetatable(Parent.new(X, Y, Width, Height, Z, BackColor, BackColor), Button)
+  local self = setmetatable(Parent.new(X, Y, Width, Height, BackColor, BackColor, Z), Button)
   self.label = Text.new(Content, X, Y, Width, Height, TextColor, FontName, FontSize, "center", "center")
   self.pressed = false
   self.oldstate = false

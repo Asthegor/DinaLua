@@ -52,10 +52,13 @@ Number of time the text will be shown (all durations will also be repeat).
 ]]--
 function Text.new(Content, X, Y, Width, Height, TextColor, FontName, FontSize, HAlign, VAlign, Z, WaitTime, DisplayTime, NbLoop)
   local self = setmetatable(Parent.new(X, Y, Width, Height, Z), Text)
-  self:setContent(Content)
-  self:setTextColor(TextColor)
   self:setFont(FontName, FontSize)
+  self:setContent(Content)
+  if not Width then Width = self:getTextWidth() end
+  if not Height then Height = self:getTextHeight(true) end
+  self:setDimensions(Width, Height)
   self:setAlignments(HAlign, VAlign)
+  self:setTextColor(TextColor)
   self:setTimers(WaitTime, DisplayTime, NbLoop)
   return self
 end

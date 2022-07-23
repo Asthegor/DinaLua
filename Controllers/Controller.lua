@@ -115,30 +115,31 @@ function Controller:update(dt)
   --Looking if a key or button has been pressed
   local res = false
   local dir = 0
+  local keybtn = nil
   for name,action in pairs(self.actions) do
     for _,k in pairs(action.Keys) do
       if k.ctl == "keyboard" then
         if action.State == "pressed" then
-          res, dir = self.keyboard:key_down(k.key)
+          res, dir, keybtn = self.keyboard:key_down(k.key)
         elseif action.State == "released" then
-          res, dir = self.keyboard:key_up(k.key)
+          res, dir, keybtn = self.keyboard:key_up(k.key)
         else
-          res, dir = self.keyboard:key(k.key)
+          res, dir, keybtn = self.keyboard:key(k.key)
         end
       elseif k.ctl == "gamepad" then
         local joyId = self.objassoc[action.ObjectId]
         if joyId then
           if action.State == "pressed" then
-            res, dir = self.gamepad:button_down(joyId, k.key, k.dir)
+            res, dir, keybtn = self.gamepad:button_down(joyId, k.key, k.dir)
           elseif action.State == "released" then
-            res, dir = self.gamepad:button_up(joyId, k.key, k.dir)
+            res, dir, keybtn = self.gamepad:button_up(joyId, k.key, k.dir)
           else
-            res, dir = self.gamepad:button(joyId, k.key, k.dir)
+            res, dir, keybtn = self.gamepad:button(joyId, k.key, k.dir)
           end
         end
       end
       if res then
-        action.Object[action.FctName](action.Object, dir, dt)
+        action.Object[action.FctName](action.Object, dir, dt, keybtn)
         res = false
       end
     end

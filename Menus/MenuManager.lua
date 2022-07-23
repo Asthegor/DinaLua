@@ -55,6 +55,7 @@ function MenuManager.new(CtrlSpace)
   self.itemgroup = Dina("Group")
   self.itemgroup:setPosition(0, Dina.height/2)
   self.currentitem = 0
+  self.centereditems = true
   self:setCtrlSpace(CtrlSpace)
 
   Dina:loadController()
@@ -194,17 +195,63 @@ function MenuManager:addItem(Text, FontName, FontSize, OnSelection, OnDeselectio
 end
 
 --[[
+proto MenuManager:getItemsDimensions()
+.D This function returns the position and dimensions (width and height) of the menu items.
+.R Returns the position X and Y of the menu items and the width and height used.
+--]]
+function MenuManager:getItemsDimensions()
+  local gx, gy = self.itemgroup:getPosition()
+  local gw, gh = self.itemgroup:getDimensions()
+  return gx, gy, gw, gh
+end
+
+--[[
+proto MenuManager:setItemsDimensions(Width, Height)
+.D This function sets the dimensions (width and height) of the menu items.
+.P Width
+Width of the space occupied by the menu items.
+.P Height
+Height of the space occupied by the menu items.
+.P Center
+Indicate if the items must be centered.
+--]]
+function MenuManager:setItemsDimensions(Width, Height, Center)
+  self.itemgroup:setDimensions(Width, Height)
+  for _, item in pairs(self.items) do
+    local iw, ih = item:getDimensions()
+    item:setDimensions(Width, ih)
+  end
+  self.centereditems = Center or false
+end
+
+--[[
+proto MenuManager:setItemsPosition(X, Y)
+.D This function sets the position of the menu items.
+.P X
+Position on the X-axis.
+.P Y
+Position on the Y-axis.
+--]]
+function MenuManager:setItemsPosition(X, Y)
+  self.itemgroup:setPosition(X, Y)
+  self.centereditems = false
+end
+
+
+--[[
 proto MenuManager:nextItem()
 .D Cette fonction permet de sélectionner l'item suivant du menu
 ]]--
-function MenuManager:nextItem()
+function MenuManager:nextItem(Centered)
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item then
-        if item.ondeselection then
+      if item.ondeselection then
         item.ondeselection(item)
-        end
+      end
+      if self.centereditems then
         CenterItem(item)
+      end
     end
   end
   self.currentitem = self.currentitem + 1
@@ -216,7 +263,9 @@ function MenuManager:nextItem()
     if item.onselection then
       item.onselection(item)
     end
-    CenterItem(item)
+    if self.centereditems then
+      CenterItem(item)
+    end
   end
 end
 
@@ -224,10 +273,12 @@ function MenuManager:previousItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item then
-        if item.ondeselection then
+      if item.ondeselection then
         item.ondeselection(item)
-        end
+      end
+      if self.centereditems then
         CenterItem(item)
+      end
     end
   end
   self.currentitem = self.currentitem - 1
@@ -239,7 +290,9 @@ function MenuManager:previousItem()
     if item.onselection then
       item.onselection(item)
     end
-    CenterItem(item)
+    if self.centereditems then
+      CenterItem(item)
+    end
   end
 end
 

@@ -165,11 +165,12 @@ Position on the Y-axis of the group.
 function Group:setPosition(X, Y)
   X = X and X or self.x
   Y = Y and Y or self.y
-  local diffX = X - self.x
+  --local diffX = X - self.x
   local diffY = Y - self.y
-  for _,v in pairs(self.components) do
-    local x, y = v:getPosition()
-    v:setPosition(x + diffX, y + diffY)
+  for _,item in pairs(self.components) do
+    local x, y = item:getPosition()
+    local diffX = X - x
+    item:setPosition(x + diffX, y + diffY)
   end
   self.x = X
   self.y = Y
