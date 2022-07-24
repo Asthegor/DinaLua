@@ -64,7 +64,7 @@ You will find tutorials (with their source code) and examples of use to download
 
 So don't wait any longer and get started! You will always be in control of your creation!
 
-Follow all the news about Dina GE on our Facebook page : https://www.facebook.com/DinaLuaGameEngine
+Follow all the news about Dina GE on our Facebook page (french only) : https://www.facebook.com/DinaLuaGameEngine
 
 
 __Installation__
