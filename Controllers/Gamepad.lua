@@ -46,17 +46,21 @@ local function hook_love_events(self)
     self.states[jid][button] = false
   end
 end
--- TODO: proto
+
+--[[
+proto const Gamepad.new()
+]]--
 function Gamepad.new()
   local self = setmetatable(Parent.new(), Gamepad)
   self.joysticks = {}
-  
   self.states = {}
   self.axebuttondown = {}
   hook_love_events(self)
   return self
 end
--- TODO: proto
+--[[
+proto Gamepad:reset()
+]]--
 function Gamepad:reset()
   for joyId,_ in pairs(self.states) do
     for button, _ in pairs(self.states[joyId]) do
@@ -67,8 +71,9 @@ function Gamepad:reset()
     end
   end
 end
-
--- TODO: proto
+--[[
+proto Gamepad:button_down(JoystickId, Button, Direction)
+]]--
 function Gamepad:button_down(JoystickId, Button, Direction)
   local joystick = self.joysticks[JoystickId]
   if not joystick then
@@ -91,7 +96,6 @@ function Gamepad:button_down(JoystickId, Button, Direction)
   local state = self.states[JoystickId][Button]
   local pcall_res, value = pcall(joystick.getGamepadAxis, joystick, Button)
   if pcall_res then
-    -- Traitement des axes
     if value ~= 0 and not self.axebuttondown[JoystickId][Button] then
       if state and Direction ~= 0 then
         if (Direction < 0 and value > 0) or (Direction > 0 and value < 0) then
@@ -108,7 +112,9 @@ function Gamepad:button_down(JoystickId, Button, Direction)
   end --pcall_res
   return state, value
 end
--- TODO: proto
+--[[
+proto Gamepad:button_up(JoystickId, Button, Direction)
+]]--
 function Gamepad:button_up(JoystickId, Button, Direction)
   local joystick = self.joysticks[JoystickId]
   if not joystick then
@@ -143,8 +149,9 @@ function Gamepad:button_up(JoystickId, Button, Direction)
   end --pcall_res
   return state, value
 end
-
--- TODO: proto
+--[[
+proto Gamepad:button(JoystickId, Button, Direction)
+]]--
 function Gamepad:button(JoystickId, Button, Direction)
   local joystick = self.joysticks[JoystickId]
   if not joystick then
@@ -177,8 +184,9 @@ function Gamepad:button(JoystickId, Button, Direction)
   end
   return isDown, value
 end
-
--- TODO: proto
+--[[
+proto Gamepad:update(dt)
+]]--
 function Gamepad:update(dt)
   for joyId,_ in pairs(self.states) do
     for button, _ in pairs(self.states[joyId]) do
@@ -186,7 +194,9 @@ function Gamepad:update(dt)
     end
   end
 end
-
+--[[
+proto Gamepad:toString(NoTitle)
+]]--
 function Gamepad:toString(NoTitle)
   local str = ""
   if not NoTitle then

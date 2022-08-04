@@ -15,20 +15,20 @@ Permission is granted to anyone to use this software for any purpose, including 
 
 --[[
 proto CollidePointRect(XA, YA, XB, YB, Width, Height)
-.D Cette fonction verifie si un point donne est a l'interieur d'un rectangle donne
+.D This function checks if the given point is inside the given rectangle.
 .P XA
-Coordonnees sur l'axe des X du point
+X-axis coordinate of the point
 .P YA
-Coordonnees sur l'axe des Y du point
+Y-axis coordinate of the point
 .P XB
-Coordonnees sur l'axe des X du rectangle
+X-axis coordinate of the rectangle
 .P YB
-Coordonnees sur l'axe des Y du rectangle
+Y-axis coordinate of the rectangle
 .P Width
-Largeur du rectangle
+Width of the rectangle
 .P Height
-Hauteur du rectangle
-.R Retourne vrai si le point est a l'interieur du rectangle
+Height of the rectangle
+.R Return true if the point is inside the rectangle.
 ]]--
 function CollidePointRect(XA, YA, XB, YB, WidthB, HeightB)
   return XA >= XB and XA <= XB + WidthB and
@@ -37,49 +37,46 @@ end
 
 --[[
 proto CollideRectRect(XA, YA, WidthA, HeightA, XB, YB, WidthB, HeightB)
-.D Cette fonction verifie si 2 rectangles collisionnent entre eux
+.D This function checks if 2 rectangles collide.
 .P XA
-Coordonnees sur l'axe des X du premier rectangle
+X-axis coordinate of the first rectangle
 .P YA
-Coordonnees sur l'axe des Y du premier rectangle
+Y-axis coordinate of the first rectangle
 .P WidthA
-Largeur du rectangle
+Width of the first rectangle
 .P HeightA
-Hauteur du rectangle
+Height of the first rectangle
 .P XB
-Coordonnees sur l'axe des X du second rectangle
+X-axis coordinate of the second rectangle
 .P YB
-Coordonnees sur l'axe des Y du second rectangle
+Y-axis coordinate of the second rectangle
 .P Width
-Largeur du second rectangle
+Width of the second rectangle
 .P Height
-Hauteur du second rectangle
-.R Retourne vrai si les deux rectangles se touchent ou se supperposent; sinon retourne faux
+Height of the second rectangle
+.R Returns true if the two rectangles touch or overlap; otherwise returns false.
 ]]--
 function CollideAABB(XA, YA, WidthA, HeightA, XB, YB, WidthB, HeightB)
-  if ((XB >= XA + WidthA) or       -- trop a droite
-      (XB + WidthB <= XA) or       -- trop a gauche
-      (YB >= YA + HeightA) or      -- trop en bas
-      (YB + HeightB <= YA)) then   -- trop en haut
-    return false;
+  if ((XB >= XA + WidthA) or (XB + WidthB <= XA) or (YB >= YA + HeightA) or (YB + HeightB <= YA)) then
+    return false
   end
-  return true; 
+  return true
 end
 
 --[[
 proto CollidePointCircle(XA, YA, XB, YB, RB)
-.D Cette fonction permet de verifier si un point donne est a l'interieur d'un cercle donne
+.D This function allows to check if a given point is inside a given circle.
 .P XA
-Coordonnees sur l'axe des X du point
+X-axis coordinate of the point
 .P YA
-Coordonnees sur l'axe des Y du point
+Y-axis coordinate of the point
 .P XB
-Coordonnees sur l'axe des X du centre du cercle
+X-axis coordinate of the center of the circle
 .P YB
-Coordonnees sur l'axe des Y du centre du cercle
+Y-axis coordinate of the center of the circle
 .P RB
-Rayon du cercle
-.R Retourne vrai si le point est a l'interieur du cercle
+Radius of the circle
+.R Return true if the point is inside the circle.
 ]]--
 function CollidePointCircle(XA, YA, XB, YB, RB)
   local dist = (XA - XB) * (XA - XB) + (YA - YB) * (YA - YB)
@@ -92,19 +89,19 @@ end
 
 --[[
 proto CollideCircleCircle(XA, YA, RA, XB, YB, RB)
-.D Cette fonction permet de verifier si 2 cercles se touchent
+.D This function allows to check if 2 circles touch each other.
 .P XA
-Coordonnees sur l'axe des X du centre du premier cercle
+X-axis coordinate of the center of the first circle
 .P YA
-Coordonnees sur l'axe des Y du centre du premier cercle
+Y-axis coordinate of the center of the first circle
 .P RA
-Rayon du premier cercle
+Radius of the first circle
 .P XB
-Coordonnees sur l'axe des X du centre du second cercle
+X-axis coordinate of the center of the second circle
 .P YB
-Coordonnees sur l'axe des Y du centre du second cercle
+Y-axis coordinate of the center of the second circle
 .P RB
-Rayon du second cercle
+Radius of the second circle
 ]]--
 function CollideCircleCircle(XA, YA, RA, XB, YB, RB)
   local dist = (XA - XB) * (XA - XB) + (YA - YB) * (YA - YB)

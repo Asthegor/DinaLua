@@ -16,7 +16,6 @@ local Dina = require("Dina")
 local Parent = Dina:require("Manager")
 setmetatable(Keyboard, {__index = Parent})
 
-
 local function hook_love_events(self)
   function love.keypressed(key, scancode, isrepeat)
     self.key_state[key] = true
@@ -25,20 +24,26 @@ local function hook_love_events(self)
     self.key_state[key] = false
   end
 end
-
+--[[
+proto const Keyboard.new()
+]]--
 function Keyboard.new()
   local self = setmetatable(Parent.new(), Keyboard)
   self.key_state = {}
   hook_love_events(self)
   return self
 end
-
+--[[
+proto Keyboard:update(dt)
+]]--
 function Keyboard:update(dt)
   for key, _ in pairs(self.key_state) do
     self.key_state[key] = nil
   end
 end
-
+--[[
+proto Keyboard:key_down(key)
+]]--
 function Keyboard:key_down(key)
   if string.lower(key) == "all" then
     for k,state in pairs(self.key_state) do
@@ -50,7 +55,9 @@ function Keyboard:key_down(key)
   end
   return self.key_state[key], 1
 end
-
+--[[
+proto Keyboard:key_up(key)
+]]--
 function Keyboard:key_up(key)
   if string.lower(key) == "all" then
     for k,state in pairs(self.key_state) do
@@ -62,7 +69,9 @@ function Keyboard:key_up(key)
   end
   return self.key_state[key] == false, 1
 end
-
+--[[
+proto Keyboard:key(key)
+]]--
 function Keyboard:key(key)
   if string.lower(key) == "all" then
     for k,state in pairs(self.key_state) do

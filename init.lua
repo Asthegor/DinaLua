@@ -79,9 +79,9 @@ end
 
 --[[
 proto Dina:draw(WithState)
-.D Cette fonction lance la fonction "draw" de l'état courant ou celle de chacun des composants chargés.
+.D This function starts the "draw" function of the current state or of each of the loaded components.
 .P WithState
-Indique si on veut prendre en compte l'état courant (vrai par défaut) ou non.
+Indicates whether to take into account the current state (true by default) or not.
 ]]--
 function Dina:draw(WithState)
   if WithState == nil then
@@ -104,7 +104,7 @@ end
 
 --[[
 proto Dina:update(dt)
-.D Cette fonction lance la fonction update de l'état courant (s'il a été défini). Autrement, cette fonction lance la fonction update de tous les composants chargés.
+.D This function starts the update function of the current state (if it has been defined). Otherwise, this function calls the update function of all loaded components.
 .P dt
 Delta time.
 ]]--
@@ -142,7 +142,7 @@ function Dina:update(dt, WithState)
     SortTableByZOrder(self.components)
   end
 
-  self:removeComponent()
+  self:removeComponents()
   if self.controller then
     if self.controller.update then
       self.controller:update(dt)
@@ -152,14 +152,26 @@ end
 
 --[[
 proto Dina:removeComponent(Component)
-.D Cette fonction supprime le composant fourni ou tous les composants indiqués comme à supprimer.
+.D This function deletes the given component.
 .P Component
 Component to remove
 ]]--
 function Dina:removeComponent(Component)
+  if Component == nil or type(Component) ~= "table" then return end
+  for item = #self.components, 1, -1 do
+    if self.components[item].id == Component.id then
+      table.remove(self.components, item)
+    end
+  end
+end
+
+--[[
+proto Dina:removeComponents()
+.D This function removes all components tag for removed.
+]]--
+function Dina:removeComponents()
   for i = #self.components, 1, -1 do
-    if self.components[i].remove or 
-       (Component and self.components[i].id == Component.id) then
+    if self.components[i].remove then
       table.remove(self.components, i)
     end
   end
@@ -167,11 +179,11 @@ end
 
 --[[
 proto Dina:setGlobalValue(Name, Data)
-.D Cette fonction permet de créer une donnée globale qui pourra être utilisée partout dans le code. Si la donnée existe déjà, elle sera écrasée.
+.D This function allows to create a global data which can be used everywhere in the code. If the data already exists, it will be overwritten.
 .P Name
-Nom de la donnée
+Name of the data
 .P Data
-Valeur de la donnée
+Value of the data
 ]]--
 function Dina:setGlobalValue(Name, Data)
   assert(IsStringValid(string.lower(Name)), "ERROR: Name must not be empty.")
@@ -180,10 +192,10 @@ end
 
 --[[
 proto Dina:getGlobalValue(Name)
-.D Cette fonction permet de récupérer la valeur d'une donnée globale.
+.D This function allows to retrieve the value of a global data.
 .P Name
-Nom de la donnée
-.R Retourne la valeur de la donnée si elle existe; autrement retourne nil.
+Name of the data
+.R Returns the value of the data if it exists; otherwise returns nil.
 ]]--
 function Dina:getGlobalValue(Name)
   return self.datas[string.lower(Name)]
@@ -191,13 +203,14 @@ end
 
 --[[
 proto Dina:addState(State, File, Load)
-.D Cette fonction ajoute un nouvel état avec le fichier fourni. Si l'état existe déjà, aucun changement n'est effectué.
+.D This function adds a new report with the supplied file. If the report already exists, no changes are made.
 .P File
-Chemin et nom du fichier sans extension.
+Path and file name without extension.
 .P Load
-Nom de la fonction à lancer lors du chargement de l'état (par défaut, "load").
+Name of the function to run when the state is loaded (by default, "load").
 ]]--
 function Dina:addState(State, File, Load)
+  self:loadController()
   if not self:isValidState(State) then
     self.statecomponents[State] = {}
     self.states[State] = require(File)
@@ -211,9 +224,9 @@ end
 
 --[[
 proto Dina:removeState(State)
-.D Cette fonction permet de retirer un état donné.
+.D This function allows to remove a given state.
 .P State
-Etat à retirer.
+State to remove.
 ]]--
 function Dina:removeState(State)
   if self:isValidState(State) then
@@ -223,11 +236,9 @@ end
 
 --[[
 proto Dina:setState(State)
-.D Cette fonction définit l'état courant et lance la fonction Load enregistrée.
+.D This function sets the current state and starts the stored Load function.
 .P State
-Nouvel état à définir.
-.P NoLoad
-Indique si la fonction Load est à exécuter (true) ou non (false; valeur par default).
+New state to define
 ]]--
 function Dina:setState(State)
   if self:isValidState(State) then
@@ -252,10 +263,10 @@ function Dina:setState(State)
 end
 --[[
 proto Dina:isValidState(State)
-.D Cette fonction vérifie si l'état donné a déjà été défini (true) ou non (false).
+.D This function checks if the given state has already been defined (true) or not (false).
 .P State
-Etat à vérifer.
-.R Retourne true si l'état existe déjà; false autrement.
+State to be checked.
+.R Returns true if the state already exists; false otherwise.
 ]]--
 function Dina:isValidState(State)
   return self.states[State] and true or false
@@ -264,7 +275,7 @@ end
 
 --[[
 proto Dina:loadController()
-.D Cette fonction permet d'initialiser la gestion des contrôleurs.
+.D This function allows you to initialize the management of the controllers.
 ]]--
 function Dina:loadController()
   if not self.controller then
@@ -274,15 +285,15 @@ end
 
 --[[
 proto Dina:setActionKeys(Object, FctName, State, ...)
-.D Cette fonction permet d'associer une ou plusieurs touches à la fonction donnée.
+.D This function allows you to associate one or more keys with the given function.
 .P Object
-Objet qui doit contenir la fonction à exécuter.
+Object that must contain the function to be executed.
 .P FctName
-Nom de la fonction à exécuter.
+Name of the function to be executed.
 .P Mode
-Mode de gestion des touches : 'pressed', 'released' ou 'continuous'.
+Mode: 'pressed', 'released' or 'continuous'.
 .P ...
-Liste des touches devant déclencher l'exécution de la fonction (voir les tutoriels ou exemples pour plus de détails).
+List of keys that should trigger the execution of the function (see tutorials or examples for more details).
 ]]--
 function Dina:setActionKeys(Object, FctName, Mode, ...)
   assert(type(Object) == "table", "ERROR: invalid Object parameter.")
@@ -296,6 +307,10 @@ function Dina:setActionKeys(Object, FctName, Mode, ...)
   self.controller:setActionKeys(UID, ...)
 end
 
+--[[
+proto Dina:resetActionKeys()
+.D This function removes all action keys previously defined by setActionKeys.
+]]--
 function Dina:resetActionKeys()
   if self.controller then
     self.controller:dissociate()
@@ -311,11 +326,8 @@ function Dina:require(Component)
   end
   return nil
 end
-
 Initialize(Dina)
-
--- System functions
+Dina = setmetatable(Dina, Dina) -- DO NOT REMOVE
 Dina.__call = function(...) return CreateComponent(...) end
 Dina.__tostring = function() return ToString() end
-Dina = setmetatable(Dina, Dina) -- DO NOT REMOVE
 return Dina

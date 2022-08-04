@@ -141,6 +141,17 @@ proto Panel:getThickness()
 function Panel:getThickness()
   return self.thickness
 end
+--[[
+proto Panel:setThickness(Thickness)
+.D This functions sets the thickness of the border of the panel.
+.P Thickness
+New value for the thickness of the border (default: 1).
+]]--
+function Panel:setThickness(Thickness)
+  Thickness = SetDefaultNumber(Thickness, 1)
+  if Thickness < 0 then Thickness = 1 end
+  self.thickness = Thickness
+end
 
 --[[
 proto Panel:getBorderColor()

@@ -312,7 +312,6 @@ local function BackupLayerDatas(Layer)
   for k,v in pairs(Layer.data) do
     Layer.originalData[k] = v
   end
-  print("Backup finished")
 end
 local function RestoreTableFrom(Data)
   local t = {}
@@ -366,12 +365,16 @@ proto LevelManager:load(File)
 Path and name of the map to load.
 ]]--
 function LevelManager:load(File)
-  self.file = require(File)
-  local fname = File:gsub("^(.*/+)", "")
-  if File == fname then
-    self.path = ""
+  if type(File) == "table" then
+    self.file = File
   else
-    self.path = File:gsub('%/'..fname..'$', '') .. "/"
+    self.file = require(File)
+    local fname = File:gsub("^(.*/+)", "")
+    if File == fname then
+      self.path = ""
+    else
+      self.path = File:gsub('%/'..fname..'$', '') .. "/"
+    end
   end
 
   for i = 1, #self.file.tilesets do
@@ -691,6 +694,9 @@ Col of the cell.
 .R Returns the tile id at the given grid coordonate in the given layer.
 ]]--
 function LevelManager:getTileIdAtPos(Layer, Row, Col)
+  if Row == nil or Col == nil then
+    return
+  end
   if Layer ~= nil then
     local mw, _ = self:getDimensions()
     local id = Layer.data[(Row-1) * mw + Col]

@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- TODO: work in progress
+-- Work in progress
 
 local Dina = require("Dina")
 local Parent = Dina:require("Manager")
@@ -52,7 +52,9 @@ local function hook_love_events(self)
   end
 end
 
--- TODO: help
+--[[
+proto const Mouse.new()
+]]--
 function Mouse.new()
   local self = setmetatable(Parent.new(), Mouse)
   self.button_state = {}
@@ -62,15 +64,17 @@ function Mouse.new()
   hook_love_events(self)
   return self
 end
---
-
+--[[
+proto Mouse:update(dt)
+]]--
 function Mouse:update(dt)
   for button, _ in pairs(self.button_state) do
     self.button_state[button] = nil
   end
 end
---
-
+--[[
+proto Mouse:button_down(button)
+]]--
 function Mouse:button_down(button)
   if button == "all" then
     for _,state in pairs(self.button_state) do
@@ -80,18 +84,17 @@ function Mouse:button_down(button)
     end
     return false, 1
   end
-  --Boutons standards
   if string.find(button,"button_") ~= nil then
     return self.button_state[button], self.position
-    --Molette
   elseif string.find(button,"wheel_") ~= nil then
     return self.button_state[button], 1
-    --Déplacement
   else
     return true, self.position
   end
 end
-
+--[[
+proto Mouse:button_up(button)
+]]--
 function Mouse:button_up(button)
   if button == "all" then
     for _,state in pairs(self.button_state) do
@@ -101,19 +104,17 @@ function Mouse:button_up(button)
     end
     return false, 1
   end
-  --Boutons standards
   if string.find(button,"button_") ~= nil then
     return self.button_state[button], self.position
-    --else
-    --Molette
   elseif string.find(button,"wheel_") ~= nil then
     return self.button_state[button], 1
-    --Déplacement
   else
     return false, self.position
   end
 end
-
+--[[
+proto Mouse:button(button)
+]]--
 function Mouse:button(button)
   if string.lower(button) == "all" then
     for _,state in pairs(self.button_state) do
@@ -125,25 +126,23 @@ function Mouse:button(button)
   end
   local mousePos = {}
   mousePos.x, mousePos.y = love.mouse.getPosition()
-  --Boutons standards
   if string.find(button,"button_") ~= nil then
     return love.mouse.isDown(string.gsub(button, "button_", "")), mousePos
-    --Molette
   elseif string.find(button,"wheel_") ~= nil then
     return true, 1
-    --Déplacement
   else
     return true, self.position
   end
 end
-
+--[[
+proto Mouse:moved()
+]]--
 function Mouse:moved()
   if self.moved then
     self.moved = false
     return true, self.position
   end
 end
---
 
 -- System functions
 Mouse.__index = Mouse

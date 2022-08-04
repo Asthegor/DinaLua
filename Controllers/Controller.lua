@@ -1,6 +1,6 @@
 local Controller = {
   _TITLE       = 'Dina Game Engine Controller',
-  _VERSION     = '2.0.5',
+  _VERSION     = '2.0.6',
   _URL         = 'https://dina.lacombedominique.com/documentation/controllers/controller/',
   _LICENSE     = [[
 Copyright (c) 2021 LACOMBE Dominique
@@ -14,45 +14,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 }
 
 -- Declaration of the parent
-
 local Dina = require("Dina")
 local Parent = Dina:require("Manager")
 setmetatable(Controller, {__index = Parent})
 
-
---[[
-proto const ControllerManager.new()
-.D This function creates a new MenuManager object.
-.R Return an instance of MenuManager object.
-]]--
-function Controller.new()
-  local self = setmetatable(Parent.new(), Controller)
-  self.keyboard = Dina("Keyboard")
-  Dina:removeComponent(self.keyboard)
-  self.gamepad = Dina("Gamepad")
-  Dina:removeComponent(self.gamepad)
-  self.mouse = Dina("Mouse")
-  Dina:removeComponent(self.mouse)
-  self.actions = {}
-  self.objassoc = {}
-  return self
-end
-
-function Controller:setActionKeys(UID, Key, ...)
-  assert(UID ~= nil and UID ~= "", "ERROR: UID parameter must be filled.")
-  assert(type(Key) == "table", "ERROR: the Key parameter must be a table.")
-  assert(string.lower(Key[1]) == "keyboard" or string.lower(Key[1]) == "gamepad" or string.lower(Key[1]) == "mouse", 
-    "ERROR: the first value in the Key parameter must be 'keyboard' , 'gamepad' or 'mouse'")
-  if not self.actions[UID].Keys then
-    self.actions[UID].Keys = {}
-  end
-  table.insert(self.actions[UID].Keys, { ctl = string.lower(Key[1]), key = string.lower(Key[2]), dir = Key[3] or 0 })
-  if (...) then
-    self:setActionKeys(UID, ...)
-  end
-end
-
-
+-- Local functions
 local function GetObjectId(Object)
   local id = Object.id
   if id == nil or id == "" then
@@ -80,6 +46,43 @@ local function GetNextJoystickId(Controller)
   return nil
 end
 
+
+--[[
+proto const ControllerManager.new()
+]]--
+function Controller.new()
+  local self = setmetatable(Parent.new(), Controller)
+  self.keyboard = Dina("Keyboard")
+  Dina:removeComponent(self.keyboard)
+  self.gamepad = Dina("Gamepad")
+  Dina:removeComponent(self.gamepad)
+  self.mouse = Dina("Mouse")
+  Dina:removeComponent(self.mouse)
+  self.actions = {}
+  self.objassoc = {}
+  return self
+end
+
+--[[
+proto Controller:setActionKeys(UID, Key, ...)
+--]]
+function Controller:setActionKeys(UID, Key, ...)
+  assert(UID ~= nil and UID ~= "", "ERROR: UID parameter must be filled.")
+  assert(type(Key) == "table", "ERROR: the Key parameter must be a table.")
+  assert(string.lower(Key[1]) == "keyboard" or string.lower(Key[1]) == "gamepad" or string.lower(Key[1]) == "mouse", 
+    "ERROR: the first value in the Key parameter must be 'keyboard' , 'gamepad' or 'mouse'")
+  if not self.actions[UID].Keys then
+    self.actions[UID].Keys = {}
+  end
+  table.insert(self.actions[UID].Keys, { ctl = string.lower(Key[1]), key = string.lower(Key[2]), dir = Key[3] or 0 })
+  if (...) then
+    self:setActionKeys(UID, ...)
+  end
+end
+
+--[[
+proto Controller:associate(Object, FctName, State)
+--]]
 function Controller:associate(Object, FctName, State)
   State = string.lower(State)
   assert(State == "pressed" or State == "released" or State == "continuous",
@@ -103,6 +106,9 @@ function Controller:associate(Object, FctName, State)
   return UID
 end
 
+--[[
+proto Controller:dissociate()
+--]]
 function Controller:dissociate()
   self.objassoc = {}
   self.actions = {}
@@ -110,7 +116,9 @@ function Controller:dissociate()
     self.gamepad:reset()
   end
 end
-
+--[[
+proto Controller:update(dt)
+--]]
 function Controller:update(dt)
   --Looking if a key or button has been pressed
   local res = false

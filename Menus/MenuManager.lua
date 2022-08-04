@@ -1,9 +1,9 @@
 local MenuManager = {
   _TITLE       = 'Dina Game Engine - Menu Manager',
-  _VERSION     = '3.1.2',
+  _VERSION     = '3.2.0',
   _URL         = 'https://dina.lacombedominique.com/documentation/menus/menumanager/',
   _LICENSE     = [[
-Copyright (c) 2019 LACOMBE Dominique
+Copyright (c) 2022 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -88,44 +88,46 @@ end
 
 --[[
 proto MenuManager:addImage(ImageName, X, Y, CenterOrigin)
-.D Cette fonction permet d'ajouter une image au menu
+.D This function allows you to add an image to the menu.
 .P ImageName
-Emplacement et nom de l'image.
+Path and name of the image.
 .P X
-Position de l'image sur l'axe des X.
+X-axis coordinate of the image
 .P Y
-Position de l'image sur l'axe des Y.
+Y-axis coordinate of the image
 .P CenterOrigin
-Indique si l'origine de l'image sera le centre de l'image.
+Specifies whether the origin of the image will be the center of the image.
+.R Returns the new image.
 ]]--
 function MenuManager:addImage(ImageName, X, Y, CenterOrigin)
   local image = Dina("Image", ImageName, X, Y, 1, 1, -100)
   if CenterOrigin == true then
     image:centerOrigin()
   end
+  return image
 end
 
 --[[
 proto MenuManager:addTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
-.D Cette fonction permet d'ajouter un titre au menu
+.D This function allows you to add a title to the menu.
 .P Title
-Titre du jeu
+Game title
 .P Y
-Position en hauteur du texte.
+Position of the text in height.
 .P FontName
-Nom de la police de caractères.
+Font name.
 .P FontSize
-Taille du texte.
+Font size.
 .P TitleColor
-Couleur du titre.
+Color of the title.
 .P WithShadow
-Indique si on veut avoir une ombre au titre.
+Indicates if you want to have a shadow on the title.
 .P ShadowColor
-COuleur de l'ombre.
+Color of the shadow.
 .P ShadowOffsetX
-Décalage de l'ombre en pixels sur l'axe des X.
+Shift of the shadow in pixels on the X axis.
 .P ShadowOffsetY
-Décalage de l'ombre en pixels sur l'axe des Y. Si non renseigné, on utilise celui de l'axe X.
+Offset of the shadow in pixels on the Y axis. If not indicated, the X axis is used.
 ]]--
 function MenuManager:addTitle(Title, Y, FontName, FontSize, TitleColor, WithShadow, ShadowColor, ShadowOffsetX, ShadowOffsetY)
   local titletext = Dina("Text", Title)
@@ -156,15 +158,16 @@ end
 
 --[[
 proto MenuManager:addItem(Text, OnSelection, OnDeselection, onValidation)
-.D Cette fonction permet d'ajouter un item au menu.
+.D This function allows you to add an item to the menu.
 .P Text
-Texte à afficher.
+Text to display.
 .P OnSelection
-Fonction à exécuter lorsqu'on sélectionne l'item.
+Function to be executed when the item is selected.
 .P OnDeselection
-Fonction à exécuter quand on quitte la sélection.
+Function to be executed when leaving the selection.
 .P onValidation
-Fonction à exécuter lorsqu'on active l'item sélectionné.
+Function to be executed when the selected item is activated.
+.R Returns the menu item.
 ]]--
 function MenuManager:addItem(Text, FontName, FontSize, OnSelection, OnDeselection, OnValidation)
   assert(type(Text) == "string" and Text ~= "", "ERROR: The parameter 'Text' must not be an empty string.")
@@ -212,16 +215,41 @@ proto MenuManager:setItemsDimensions(Width, Height)
 Width of the space occupied by the menu items.
 .P Height
 Height of the space occupied by the menu items.
+.P Mode
+Mode 'vertical' (default) or 'horizontal'
 .P Center
-Indicate if the items must be centered.
+Indicate if the items must be centered (ignored for 'vertical' mode).
 --]]
-function MenuManager:setItemsDimensions(Width, Height, Center)
-  self.itemgroup:setDimensions(Width, Height)
-  for _, item in pairs(self.items) do
-    local iw, ih = item:getDimensions()
-    item:setDimensions(Width, ih)
+function MenuManager:setItemsDimensions(Width, Height, Mode, Centered)
+  if not Mode then
+    Mode = "vertical"
   end
-  self.centereditems = Center or false
+  assert(string.lower(Mode) == "horizontal" or string.lower(Mode) == "vertical", "ERROR: The parameter 'Mode' must be 'horizontal' or 'vertical'.")
+  
+  if string.lower(Mode) == "vertical" then
+    self.itemgroup:setDimensions(Width, Height)
+    for _, item in pairs(self.items) do
+      local iw, ih = item:getDimensions()
+      item:setDimensions(Width, ih)
+    end
+  self.centereditems = Centered or false
+  elseif string.lower(Mode) == "horizontal" then
+    self.itemgroup:setDimensions(Width, Height)
+    local nbItems = #self.items
+    local itemMaxWidth = (Width - self.ctrlspace * (nbItems - 1)) / nbItems
+    local i = 1
+    local ix, iy
+    for _, item in pairs(self.items) do
+      if not ix and not iy then
+        ix, iy = item:getPosition()
+      end
+      item:setAlignments("center", "center")
+      item:setDimensions(itemMaxWidth, Height)
+      item:setPosition(itemMaxWidth * (i - 1), iy)
+      i = i + 1
+    end
+    self.centereditems = false
+  end
 end
 
 --[[
@@ -240,9 +268,9 @@ end
 
 --[[
 proto MenuManager:nextItem()
-.D Cette fonction permet de sélectionner l'item suivant du menu
+.D This function allows you to select the next menu item.
 ]]--
-function MenuManager:nextItem(Centered)
+function MenuManager:nextItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
     if item then
@@ -269,6 +297,10 @@ function MenuManager:nextItem(Centered)
   end
 end
 
+--[[
+proto MenuManager:previousItem()
+.D This function allows you to select the previous menu item.
+]]--
 function MenuManager:previousItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
@@ -295,7 +327,10 @@ function MenuManager:previousItem()
     end
   end
 end
-
+--[[
+proto MenuManager:validateItem()
+.D This function allows you to validate the selected menu item.
+]]--
 function MenuManager:validateItem()
   if self.currentitem > 0 then
     local item = self.items[self.currentitem]
@@ -307,7 +342,7 @@ function MenuManager:validateItem()
   end
 end
 
--- Fonction système
+-- System functions - Do not remove
 function MenuManager:toString(NoTitle)
   local str = ""
   if not NoTitle then
@@ -323,7 +358,6 @@ function MenuManager:toString(NoTitle)
   end
   return str
 end
--- System functions
 MenuManager.__tostring = function(MenuManager, NoTitle) return MenuManager:toString(NoTitle) end
 MenuManager.__index = MenuManager
 MenuManager.__name = "MenuManager"
