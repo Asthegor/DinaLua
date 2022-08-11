@@ -894,13 +894,16 @@ Position on the Y-axis.
 ]]--
 function LevelManager:convertCoordToRowCol(X, Y)
   local mw, mh, tw, th = self:getDimensions()
-  local col = math.floor(X / tw) + 1
-  local row = math.floor(Y / th)
+  local col, row
   if X < 0 or X > mw * tw then
     col = nil
+  else
+    col = math.floor(X / tw) + 1
   end
   if Y < 0 or Y > mh * th then
     row = nil
+  else
+    row = math.floor(Y / th) + 1
   end
   return row, col
 end

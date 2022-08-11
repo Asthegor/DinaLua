@@ -120,13 +120,15 @@ Type of sound; could only be 'stream', 'static' or 'queue' (Löve2D requirements
 ]]--
 function Sound:setNewSound(File, Type)
   if File then
+    local nbLoop = self.nbloop
+    local volume = self.volume
     self:stop()
     if not Type or Type == "" then
       Type = "stream"
     end
     self.source = love.audio.newSource(File, Type)
-    self:setLooping(-1)
-    self:setVolume(1)
+    self:setLooping(nbLoop)
+    self:setVolume(volume)
   end
 end
 
