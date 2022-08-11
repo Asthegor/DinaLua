@@ -1,6 +1,6 @@
 local LevelManager = {
   _TITLE       = 'Dina Level Manager',
-  _VERSION     = '2.6',
+  _VERSION     = '2.7',
   _URL         = 'https://dina.lacombedominique.com/documentation/levels/levelmanager/',
   _LICENSE     = [[
 Copyright (c) 2019-2022 LACOMBE Dominique
