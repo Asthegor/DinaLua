@@ -60,6 +60,7 @@ function Text.new(Content, X, Y, Width, Height, TextColor, FontName, FontSize, H
   self:setAlignments(HAlign, VAlign)
   self:setTextColor(TextColor)
   self:setTimers(WaitTime, DisplayTime, NbLoop)
+  self.translation = nil
   return self
 end
 
@@ -109,12 +110,22 @@ function Text:setContent(Content)
     Content = ""
   end
   local bUpdate = (self.content == "" or self.content == nil)
+  local font = self:getFont()
+  local cw = font:getWidth(Content)
+  if cw > self.width then
+    bUpdate = true
+  end
   self.content = Content
   if self.content == "" then
     self:resetTimers()
   end
   if bUpdate then
-    self:setDimensions(self:getTextWidth(), self:getTextHeight())
+    local width = self.width
+    if cw > width then width = cw end
+    local ch = self:getTextHeight()
+    local height = self.height
+    if ch > height then height = ch end
+    self:setDimensions(width, height)
   end
 end
 

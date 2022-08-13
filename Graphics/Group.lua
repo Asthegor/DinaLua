@@ -43,7 +43,6 @@ Composant à ajouter au groupe.
 ]]--
 function Group:add(Component)
   table.insert(self.components, Component)
-  Dina:removeComponent(Component)
   self:updateDimensions()
 end
 
@@ -77,22 +76,6 @@ proto Group:callbackZOrder()
 ]]--
 function Group:callbackZOrder()
   SortTableByZOrder(self.components)
-end
-
---[[
-proto Group:draw()
-.D This function launches the Draw function of all its components.
-]]--
-function Group:draw()
-  if self.visible then
-    love.graphics.setColor(1,1,1,1)
-    for _,v in pairs(self.components) do
-      if v.draw then
-        v:draw()
-      end
-    end
-    love.graphics.setColor(1,1,1,1)
-  end
 end
 
 --[[
@@ -212,19 +195,6 @@ function Group:setVisible(Visible)
   end
 end
 
---[[
-proto Group:update(dt)
-.D This funtion launches all updates needed for each of the components of the group.
-.P dt
-Delta time.
-]]--
-function Group:update(dt)
-  for _,v in pairs(self.components) do
-    if v.update then
-      v:update(dt)
-    end
-  end
-end
 
 --[[
 proto Group:toString(NoTitle)
@@ -248,6 +218,8 @@ function Group:toString(NoTitle)
   return str
 end
 -- System functions
+function Group:update(dt) end
+function Group:draw() end
 Group.__tostring = function(Group, NoTitle) return Group:toString(NoTitle) end
 Group.__index = Group
 Group.__name = "Group"

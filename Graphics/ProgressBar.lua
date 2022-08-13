@@ -18,6 +18,8 @@ local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(ProgressBar, {__index = Parent})
 
+
+
 --[[
 proto const ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColor, BackColor, Z, BorderThickness)
 .D This function creates a new ProgressBar object.
@@ -52,7 +54,10 @@ function ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColo
   self.max = Max or Value
   self.imgback = nil
   self.imgbar = nil
-
+  self.quad = love.graphics.newQuad(X, Y, Width, Height, Width, Height)
+  self.mode = "LeftRight"
+  self.dirx = 1
+  self.diry = 0
   return self
 end
 
@@ -63,11 +68,28 @@ proto ProgressBar:draw()
 function ProgressBar:draw()
   if self.visible then
     love.graphics.setColor(1,1,1,1)
-    local barsize = (self.width - 2) * (self.value / self.max)
+    local ratio =  self.value / self.max
+    local pbx = 0
+    local pby = 0
+    local pbw = self.width
+    local pbh = self.height
+    if string.lower(self.mode) == "leftright" then
+      pbw = (self.width - 2) * ratio
+    elseif string.lower(self.mode) == "rightleft" then
+      pbw = (self.width - 2) * ratio
+      pbx = self.width - pbw
+    elseif string.lower(self.mode) == "topbottom" then
+      pbh = (self.height - 2) * ratio
+    elseif string.lower(self.mode) == "bottomtop" then
+      pbh = (self.height - 2) * ratio
+      pby = self.height - pbh
+    end
+
+--    local barsize = (self.width - 2) * (self.value / self.max)
     if self.imgback and self.imgbar then
       love.graphics.draw(self.imgback, self.x, self.y)
-      local barquad = love.graphics.newQuad(0, 0, barsize, self.height, self.width, self.height)
-      love.graphics.draw(self.imgbar, barquad, self.x, self.y)
+      self.quad:setViewport(pbx, pby, pbw, pbh, self.width, self.height)
+      love.graphics.draw(self.imgbar, self.quad, self.x + pbx, self.y + pby)
     else
       self:drawPanel()
       love.graphics.setColor(self.frontcolor)
@@ -99,15 +121,17 @@ end
 proto ProgressBar:setImages(Back, Bar)
 .D This function sets the back and front image to draw the progress bar. The progress bar is adjusted to the dimensions of the image used for the back.
 .P Back
-Image used for the back.
+Path of the image used for the back.
 .P Bar
-Image used to draw the bar.
+Path of the image used to draw the bar.
 ]]--
 function ProgressBar:setImages(Back, Bar)
-  self.imgback = Back
-  self.imgbar = Bar
-  self.width = Back:getWidth()
-  self.height = Back:getHeight()
+  self.imgback = love.graphics.newImage(Back)
+  self.imgbar = love.graphics.newImage(Bar)
+  self.width = self.imgback:getWidth()
+  self.height = self.imgback:getHeight()
+  self.quad:release()
+  self.quad = love.graphics.newQuad(0, 0, self.width, self.height, self.width, self.height)
 end
 
 --[[
@@ -150,6 +174,14 @@ function ProgressBar:setValue(Value)
   if Value < 0 then Value = 0 end
   if Value > self.max then Value = self.max end
   self.value = Value
+end
+
+function ProgressBar:setMode(Mode)
+  if string.lower(Mode) == "leftright" or string.lower(Mode) == "rightleft" or string.lower(Mode) == "topbottom" or string.lower(Mode) == "bottomtop" then
+    self.mode = Mode
+  else
+    print(string.format("ERROR: Incorrect value for Mode '%s'", tostring(Mode)))
+  end
 end
 
 --[[

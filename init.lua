@@ -40,6 +40,24 @@ local function CreateComponent(Dina, ComponentType, ...)
       table.insert(Dina.statecomponents[Dina.loadingstate], Component)
     end
     table.insert(Dina.components, Component)
+    
+    -- On se crée une table contenant l'ID du composant et l'ID de la traduction
+    if Component.__name then
+      if Component.__name == "Text" then
+        Dina.translations[Component.id] = Component:getContent()
+        if Dina.translator then
+          if not Dina.currentlanguage then
+            Dina.currentlanguage = Dina.translator:getFirstLanguage()
+          end
+          local content = Component:getContent()
+          local key = Dina.translations[Component.id]
+          local translation = Dina.translator:getTranslation(Dina.currentlanguage, key)
+          if translation ~= nil and translation ~= content then
+            Component:setContent(translation)
+          end
+        end
+      end
+    end
     return Component
   end
   print("ERROR: Component '"..tostring(ComponentType).."' not found.")
@@ -55,6 +73,7 @@ local function Initialize(self)
   self.loadfcts = {}
   self.statecomponents = {}
   self.datas = {}
+  self.translations = {}
 
   self.width = love.graphics.getWidth()
   self.height = love.graphics.getHeight()
@@ -130,6 +149,17 @@ function Dina:update(dt, WithState)
         elseif component.isZOrderChanged then
           if component:isZOrderChanged() == true then
             calculate = true
+          end
+        end
+        if self.translator and component.__name == "Text" then
+          if not self.currentlanguage then
+            self.currentlanguage = self.translator:getFirstLanguage()
+          end
+          local content = component:getContent()
+          local key = self.translations[component.id]
+          local translation = self.translator:getTranslation(self.currentlanguage, key)
+          if translation ~= nil and translation ~= content then
+            component:setContent(translation)
           end
         end
         if component.update then
@@ -272,6 +302,50 @@ function Dina:isValidState(State)
   return self.states[State] and true or false
 end
 
+--[[
+proto Dina:loadTranslator()
+.D This function allows you to initialize the management of the translation.
+]]--
+function Dina:loadTranslator()
+  if not self.translator then
+    self.translator = CreateComponent(Dina, "TranslatorManager")
+  end
+end
+
+--[[
+proto Dina:addLanguage(Language, File)
+.D This function allows you to add a given language. The translation is in the given file.
+.P Language
+Language for the translation.
+.P File
+File containing the translations.
+]]--
+function Dina:addLanguage(Language, File)
+  if not self.translator then
+    self:loadTranslator()
+  end
+  self.translator:loadFile(Language, File)
+end
+
+function Dina:setLanguage(Language)
+  if self.translator:setLanguage(Language) then
+    self.currentlanguage = Language
+  else
+    print(string.format("ERROR: Invalid language '%s'", Language))
+  end
+end
+
+function Dina:getCurrentLanguage()
+  return self.currentlanguage
+end
+
+function Dina:getNextLanguage()
+  return self.translator:getNextLanguage()
+end
+
+function Dina:translate(Text)
+  return self.translator:getTranslation(self.currentlanguage, Text)
+end
 
 --[[
 proto Dina:loadController()
