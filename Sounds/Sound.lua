@@ -26,7 +26,7 @@ Type of sound; could only be 'stream', 'static' or 'queue' (Löve2D requirements
 .P NbLoop
 Number of time the sound could be played. -1 to indicate infinite.
 .P Volume
-Volume of the sound. Normal sound is 1 (default).
+Volume of the sound between 0 and 1. Normal sound is 1 (default).
 .R Returns an instance of Sound object
 ]]--
 function Sound.new(File, Type, NbLoop, Volume)
@@ -41,16 +41,6 @@ function Sound.new(File, Type, NbLoop, Volume)
   self:setVolume(SetDefaultNumber(Volume, 1))
   self.paused = false
   return self
-end
-
---[[
-proto Sound:changeVolume(Volume)
-.D This function increase or decrease the volume of the sound.
-.P Volume
-Add this value to the current volume.
-]]--
-function Sound:changeVolume(Volume)
-  self.volume = self.volume + Volume
 end
 
 --[[
@@ -169,6 +159,7 @@ function Sound:update(dt)
   end
 end
 
+-- System functions
 function Sound:toString(NoTitle)
   local str = ""
   if not NoTitle then

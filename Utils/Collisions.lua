@@ -56,7 +56,7 @@ Width of the second rectangle
 Height of the second rectangle
 .R Returns true if the two rectangles touch or overlap; otherwise returns false.
 ]]--
-function CollideAABB(XA, YA, WidthA, HeightA, XB, YB, WidthB, HeightB)
+function CollideRectRect(XA, YA, WidthA, HeightA, XB, YB, WidthB, HeightB)
   if ((XB >= XA + WidthA) or (XB + WidthB <= XA) or (YB >= YA + HeightA) or (YB + HeightB <= YA)) then
     return false
   end

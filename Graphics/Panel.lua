@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Base")
 setmetatable(Panel, {__index = Parent})
@@ -40,7 +40,7 @@ Thickness of the panel border.
 .R Return an instance of Panel object.
 ]]--
 function Panel.new(X, Y, Width, Height, BorderColor, BackColor, Z, Thickness)
-  -- Appel du constructeur du parent
+  -- Call the parent constructor
   local self = setmetatable(Parent.new(X, Y), Panel)
   self:setDimensions(Width, Height)
   self:setBorderColor(BorderColor)
@@ -64,7 +64,7 @@ end
 
 --[[
 proto Panel:drawPanel()
-.D This function draw the panel (mainly used for child elements).
+.D This function draw the panel (mainly used for child elements in components).
 ]]--
 function Panel:drawPanel()
   love.graphics.setColor(1,1,1,1)
@@ -85,7 +85,7 @@ end
 proto Panel:getWidth(Original)
 .D This functions returns the width of the panel.
 .P Original
-Indique si on doit utiliser les dimensions originelles.
+Indicates if the original dimensions should be used.
 .R Returns the width of the panel.
 ]]--
 function Panel:getWidth(Original)
@@ -99,7 +99,7 @@ end
 proto Panel:getHeight(Original)
 .D This functions returns the height of the panel.
 .P Original
-Indique si on doit utiliser les dimensions originelles.
+Indicates if the original dimensions should be used.
 .R Returns the height of the panel.
 ]]--
 function Panel:getHeight(Original)
@@ -111,10 +111,10 @@ end
 
 --[[
 proto Panel:getDimensions(Original)
-.D Cette fonction retourne la largeur et la hauteur.
-.P-f Original
-Indique si on doit retourner les dimensions originelles.
-.R Retourne la largeur et la hauteur.
+.D This function returns the width and height.
+.P Original
+Indicates whether to return the original dimensions.
+.R Returns the width and height.
 ]]--
 function Panel:getDimensions(Original)
   return self:getWidth(Original), self:getHeight(Original)
@@ -143,7 +143,7 @@ function Panel:getThickness()
 end
 --[[
 proto Panel:setThickness(Thickness)
-.D This functions sets the thickness of the border of the panel.
+.D This functions sets the thickness (in pixels) of the border of the panel.
 .P Thickness
 New value for the thickness of the border (default: 1).
 ]]--
@@ -308,6 +308,7 @@ function Panel:toString(NoTitle)
   end
   return str
 end
+-- System functions
 Panel.__tostring = function(Panel, NoTitle) return Panel:toString(NoTitle) end
 Panel.__index = Panel
 Panel.__name = "Panel"

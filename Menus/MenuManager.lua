@@ -42,9 +42,11 @@ end
 --
 
 --[[
-proto const MenuManager.new()
-.D Cette fonction crée une instance de l'objet MenuManager.
-.R Retourne une instance de l'objet MenuManager.
+proto const MenuManager.new(CtrlSpace)
+.D This function creates an instance of the MenuManager object.
+.P CtrlSpace
+Length (in pixels) of the space between the menu items.
+.R Returns an instance of the MenuManager object.
 ]]--
 function MenuManager.new(CtrlSpace)
   local self = setmetatable(Parent.new(), MenuManager)
@@ -62,6 +64,14 @@ function MenuManager.new(CtrlSpace)
   return self
 end
 
+--[[
+proto MenuManager:setNextKeys(Args...)
+.D This function defines the given keys to use to go to the next menu item.
+.D By default, the Down key on the keyboard, the down left axis on the gamepad,
+.D the scroll wheel down on the mouse and if you move over the menu item with the mouse.
+.P Args...
+Keys to use to go to the next menu item
+]]--
 function MenuManager:setNextKeys(...)
   if (...) then
     Dina:setActionKeys(self, "nextItem", "pressed", ...)
@@ -70,6 +80,14 @@ function MenuManager:setNextKeys(...)
   end
 end
 
+--[[
+proto MenuManager:setPreviousKeys(Args...)
+.D This function defines the given keys to use to go to the previous menu item.
+.D By default, the Up key on the keyboard, the up left axis on the gamepad,
+.D the scroll wheel up on the mouse and if you move over the menu item with the mouse.
+.P Args...
+Keys to use to go to the previous menu item
+]]--
 function MenuManager:setPreviousKeys(...)
   if (...) then
     Dina:setActionKeys(self, "previousItem", "pressed", ...)
@@ -78,6 +96,13 @@ function MenuManager:setPreviousKeys(...)
   end
 end
 
+--[[
+proto MenuManager:setValidateKeys(Args...)
+.D This function defines the given keys to use to validate the selected menu item.
+.D By default, the Space key on the keyboard, the A button on the gamepad and the mouse left button.
+.P Args...
+Keys to use to validate the selected menu item
+]]--
 function MenuManager:setValidateKeys(...)
   if (...) then
     Dina:setActionKeys(self, "validateItem", "pressed", ...)
@@ -151,6 +176,13 @@ function MenuManager:addTitle(Title, Y, FontName, FontSize, TitleColor, WithShad
   end
 end
 
+
+--[[
+proto MenuManager:setCtrlSpace(Value)
+.D This function sets the space between the menu items.
+.P CtrlSpace
+Length (in pixels) of the space between the menu items.
+]]--
 function MenuManager:setCtrlSpace(Value)
   self.ctrlspace = SetDefaultNumber(Value, 0)
 end
@@ -209,7 +241,7 @@ function MenuManager:getItemsDimensions()
 end
 
 --[[
-proto MenuManager:setItemsDimensions(Width, Height)
+proto MenuManager:setItemsDimensions(Width, Height, Mode, Centered)
 .D This function sets the dimensions (width and height) of the menu items.
 .P Width
 Width of the space occupied by the menu items.
@@ -217,8 +249,8 @@ Width of the space occupied by the menu items.
 Height of the space occupied by the menu items.
 .P Mode
 Mode 'vertical' (default) or 'horizontal'
-.P Center
-Indicate if the items must be centered (ignored for 'vertical' mode).
+.P Centered
+Indicate if the items must be centered (ignored for 'horizontal' mode).
 --]]
 function MenuManager:setItemsDimensions(Width, Height, Mode, Centered)
   if not Mode then

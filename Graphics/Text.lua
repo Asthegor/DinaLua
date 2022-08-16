@@ -66,7 +66,8 @@ end
 
 --[[
 proto Text:draw()
-.D This function draw the text with its color and font. The text is aligned horizontally and vertically inside the width and height defined during its creation (by default, upper left).
+.D This function draw the text with its color and font.
+.D The text is aligned horizontally and vertically inside the width and height defined during its creation (by default, upper left).
 ]]--
 function Text:draw()
   if self.visible then
@@ -165,7 +166,8 @@ function Text:setFont(FontName, FontSize)
 end
 --[[
 proto Text:setFontSize(Size)
-.D This function changes the font size of the text. If no font has been set, the current text size will remain. The width and height of the text are updated.
+.D This function changes the font size of the text. If no font has been set, the current text size will remain.
+.D The width and height of the text are updated.
 .P Size
 New font size.
 ]]--
@@ -256,7 +258,7 @@ proto Text:setAlignments(HAlign, VAlign)
 .P HAlign
 Horizontal alignment of the text. Can be "left", "center" or "right" (default : left).
 .P VAlign
-Vertical alignment of the text. Can be "up", "center" or "bottom (default : up)
+Vertical alignment of the text. Can be "top", "center" or "bottom (default : top)
 ]]--
 function Text:setAlignments(HAlign, VAlign)
   HAlign = string.lower(HAlign or "")
@@ -265,8 +267,8 @@ function Text:setAlignments(HAlign, VAlign)
   end
   self.halign = HAlign
   VAlign = string.lower(VAlign or "")
-  if VAlign ~= "up" and VAlign ~= "center" and VAlign ~= "bottom" then
-    VAlign = "up"
+  if VAlign ~= "top" and VAlign ~= "center" and VAlign ~= "bottom" then
+    VAlign = "top"
   end
   self.valign = VAlign
 end

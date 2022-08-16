@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Base")
 setmetatable(Group, {__index = Parent})
@@ -39,7 +39,7 @@ end
 proto Group:add(Component)
 .D This function add a given component to the group.
 .P Component
-Composant à ajouter au groupe.
+Component to add to the group.
 ]]--
 function Group:add(Component)
   table.insert(self.components, Component)
@@ -61,7 +61,7 @@ proto Group:remove(Component)
 .P Component
 Component to remove from the group.
 ]]--
-function Group:removeComponent(Component)
+function Group:remove(Component)
   for i=#self.components, 1, -1 do
     if self.components[i] == Component then
       Component.remove = true

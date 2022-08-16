@@ -13,7 +13,11 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Work in progress
+--[[
+.D This module should only be used through the Dina framework.
+.D Any other use may not work properly.
+]]--
+
 
 local Dina = require("Dina")
 local Parent = Dina:require("Manager")

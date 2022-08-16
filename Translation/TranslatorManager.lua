@@ -28,10 +28,14 @@ local function UnpackLine(Line, Sep)
   end
   return key, value
 end
+local function IsValidLanguage(TranslatorManager, Language)
+  return TranslatorManager.translations[Language] and true or false
+end
 
 --[[
-proto const TranslatorManager.load()
-.D This function load the module for the translation.
+proto const TranslatorManager.new()
+.D This function creates an instance of TranslatorManager object.
+.R Returns an instance of TranslatorManager object.
 ]]--
 function TranslatorManager.new()
   local self = setmetatable(Parent.new(), TranslatorManager)
@@ -64,30 +68,58 @@ function TranslatorManager:loadFile(Language, File)
   end
 end
 
-function TranslatorManager:isValidLanguage(Language)
-  return self.translations[Language] and true or false
-end
-
+--[[
+proto TranslatorManager:getTranslation(Language, Key)
+.D This function returns the translation in the given language of the text defined by the given key.
+.P Language
+Language to use for the translation.
+.P Key
+Key to retreive the translated text.
+,R Returns the translation in the given language of the text defined by the given key.
+]]--
 function TranslatorManager:getTranslation(Language, Key)
   return self.translations[Language][Key]
 end
 
+--[[
+proto TranslatorManager:getFirstLanguage()
+.D This function retreives the first language.
+.R Returns the first language code (defined using the function loadFile).
+]]--
 function TranslatorManager:getFirstLanguage()
   return next(self.translations)
 end
 
+--[[
+proto TranslatorManager:getLanguage()
+.D This function returns the current language code.
+.R Returns the current language code.
+]]--
 function TranslatorManager:getLanguage()
   return self.currentlanguage
 end
 
+--[[
+proto TranslatorManager:setLanguage(Language)
+.D This function defines the current language. Must be loaded by the lodFile function.
+.P Language
+Language to use for the translation.
+.R Returns true if the language is one of the languages loaded by the lodFile function; otherwise false.
+]]--
 function TranslatorManager:setLanguage(Language)
-  if self:isValidLanguage(Language) then
+  if IsValidLanguage(self, Language) then
     self.currentlanguage = Language
     return true
   end
   return false
 end
 
+--[[
+proto TranslatorManager:getNextLanguage()
+.D This function returns the next language available.
+.D If it was the last language, return the first one.
+.R Returns the next language available.
+]]--
 function TranslatorManager:getNextLanguage()
   local language = next(self.translations)
   local found = false
@@ -104,5 +136,6 @@ function TranslatorManager:getNextLanguage()
   return language
 end
 
+-- System functions
 TranslatorManager.__index = TranslatorManager
 return TranslatorManager

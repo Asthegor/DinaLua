@@ -13,6 +13,12 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
+--[[
+proto const Manager.new()
+.D This function creates a new instance of Manager and define an unique id.
+.R Returns a new instance of Manager.
+]]--
+
 function Manager.new()
   local self = {}
   local id = string.gsub(tostring(self), "table: ", "")
@@ -21,5 +27,6 @@ function Manager.new()
   return self
 end
 
+--System functions
 Manager.__index = Manager
 return Manager

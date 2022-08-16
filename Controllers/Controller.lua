@@ -12,6 +12,10 @@ Permission is granted to anyone to use this software for any purpose, including 
     3. This notice may not be removed or altered from any source distribution.
 ]]
 }
+--[[
+.I This module should only be used through the Dina framework.
+.I Any other use may not work properly.
+]]--
 
 -- Declaration of the parent
 local Dina = require("Dina")
@@ -65,7 +69,7 @@ end
 
 --[[
 proto Controller:setActionKeys(UID, Key, ...)
---]]
+]]--
 function Controller:setActionKeys(UID, Key, ...)
   assert(UID ~= nil and UID ~= "", "ERROR: UID parameter must be filled.")
   assert(type(Key) == "table", "ERROR: the Key parameter must be a table.")
@@ -82,7 +86,7 @@ end
 
 --[[
 proto Controller:associate(Object, FctName, State)
---]]
+]]--
 function Controller:associate(Object, FctName, State)
   State = string.lower(State)
   assert(State == "pressed" or State == "released" or State == "continuous",
@@ -108,7 +112,7 @@ end
 
 --[[
 proto Controller:dissociate()
---]]
+]]--
 function Controller:dissociate()
   self.objassoc = {}
   self.actions = {}
@@ -118,7 +122,7 @@ function Controller:dissociate()
 end
 --[[
 proto Controller:update(dt)
---]]
+]]--
 function Controller:update(dt)
   --Looking if a key or button has been pressed
   local res = false

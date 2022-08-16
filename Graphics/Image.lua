@@ -34,6 +34,10 @@ Scale on the X axis of the image (default: 1).
 Scale on the Y axis of the image (default: 1).
 .P Z
 Z-order of the image (default: 1).
+.P FlipX
+Direction to display the image. 1 for standard and -1 for reverse (default: 1).
+.P FlipY
+Direction to display the image. 1 for standard and -1 for reverse (default: 1).
 .R Return an instance of Image object.
 ]]--
 function Image.new(File, X, Y, ScaleX, ScaleY, Z, FlipX, FlipY)
@@ -49,8 +53,10 @@ function Image.new(File, X, Y, ScaleX, ScaleY, Z, FlipX, FlipY)
 end
 
 --[[
-proto Image:draw()
+proto Image:draw(Color)
 .D This function draws the image if visible.
+.P Color
+Color to draw the image.
 ]]--
 function Image:draw(Color)
   if self.visible then
@@ -75,9 +81,9 @@ end
 proto Image:setFlip(FlipX, FlipY)
 .D This functions define on which side the imge must be displayed.
 .P FlipX
-Direction to display the image. 1 for standard and -1 for reverse.
+Direction to display the image. 1 for standard and -1 for reverse (default: 1).
 .P FlipY
-Direction to display the image. 1 for standard and -1 for reverse.
+Direction to display the image. 1 for standard and -1 for reverse (default: 1).
 ]]--
 function Image:setFlip(FlipX, FlipY)
   if FlipX ~= 1 and FlipX ~= -1 then

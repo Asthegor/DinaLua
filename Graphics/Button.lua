@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(Button, {__index = Parent})
@@ -210,7 +210,7 @@ end
 
 --[[
 proto Button:toString(NoTitle)
-.D This function display all variables containing in the current Button instance (tables and functions are excluded).
+.D This function display all variables containing in the current Button instance (tables and functions excluded).
 .P NoTitle
 Indicates if the title must be displayed (false) or not (true).
 ]]--

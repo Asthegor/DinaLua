@@ -45,10 +45,13 @@ Permission is granted to anyone to use this software for any purpose, including 
     3. This notice may not be removed or altered from any source distribution.
 ]]
 }
+--[[
+.D This module must be redone in its entirety.
+]]--
 
 local Dina = require('Dina')
 
--- Fonctions locales
+-- Local functions
 local function UnpackLine(pLine, pKey, pSep)
   pLine = pLine:gsub(pKey, "")
   local tdeb = 0
@@ -62,7 +65,6 @@ local function UnpackLine(pLine, pKey, pSep)
   until (tend == nil)
   return result
 end
-
 local function UnpackDialogFile(pFile)
   local dialogs = {}
 
@@ -236,14 +238,14 @@ end
 
 
 --[[
-proto const DialogManager.New(Name, ActionKey, Width, Border)
+proto const DialogManager.New(ActionKey, Width, Height, Border)
 .D This function creates a new DialogManager object.
-.P Name
-Name of the component in Dina Game Engine.
 .P ActionKey
 Key used to speed up the current text or to go to the next dialog.
 .P Width
 Width in pixels that all components must not exceed.
+.P Width
+Height in pixels that all components must not exceed.
 .P Border
 Size in pixels for the border.
 .R Return an instance of DialogManager object.
@@ -279,10 +281,8 @@ function DialogManager.new(ActionKey, Width, Height, Border)
 end
 
 --[[
-proto DialogManager:addComponent(ComponentName, ComponentType, Args...)
+proto DialogManager:addComponent(ComponentType, Args...)
 .D This function add a new component defined by its given name and type. Can not be as the same type of the manager.
-.P ComponentName
-Name of the component to add.
 .P ComponentType
 Type of the component to add.
 .P Args...
@@ -354,6 +354,11 @@ function DialogManager:draw()
   end
 end
 
+--[[
+proto DialogManager:getDialog()
+.D This function returns the current dialog.
+.R Returns the current dialog.
+]]--
 function DialogManager:getDialog()
   if self.dialogfinished == false then
     return self.currentdialog[self.numDialog]
@@ -369,16 +374,30 @@ function DialogManager:getName()
   return self.name
 end
 
+--[[
+proto DialogManager:isActionKeyPressed()
+.D This function checks if the action key is pressed.
+.R True if the action key/button is pressed; false otherwise.
+]]--
 function DialogManager:isActionKeyPressed()
   if self.key == "mb1" then
     return love.mouse.isDown(1)
   end
   return love.keyboard.isDown(self.key)
 end
+
+--[[
+proto DialogManager:isDialogFinished()
+.D This function returns if the dialog is finished or not.
+.R True if the dialog is finished; false otherwise.
+]]--
 function DialogManager:isDialogFinished()
   return self.dialogfinished
 end
 
+--[[
+proto DialogManager:continueDialog()
+]]--
 function DialogManager:continueDialog()
   self.continuedialog = true
 end

@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
   ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(ProgressBar, {__index = Parent})
@@ -22,7 +22,7 @@ setmetatable(ProgressBar, {__index = Parent})
 
 --[[
 proto const ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColor, BackColor, Z, BorderThickness)
-.D This function creates a new ProgressBar object.
+.D This function creates a new ProgressBar object. By default, the progress is from left to right.
 .P X
 Position on the X axis of the progress bar.
 .P Y
@@ -45,9 +45,11 @@ Back color of the progress bar.
 Z-Order of the progress bar.
 .P BorderThickness
 Thickness of the border.
+.P Mode
+Progress bar display mode.
 .R Return an instance of ProgressBar object.
 ]]--
-function ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColor, BackColor, Z, BorderThickness)
+function ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColor, BackColor, Z, BorderThickness, Mode)
   local self = setmetatable(Parent.new(X, Y, Width, Height, BorderColor, BackColor, Z, BorderThickness), ProgressBar)
   self:setColor(FrontColor, BorderColor, BackColor)
   self.value = Value
@@ -55,7 +57,7 @@ function ProgressBar.new(X, Y, Width, Height, Value, Max, FrontColor, BorderColo
   self.imgback = nil
   self.imgbar = nil
   self.quad = love.graphics.newQuad(X, Y, Width, Height, Width, Height)
-  self.mode = "LeftRight"
+  self:setMode(Mode)
   self.dirx = 1
   self.diry = 0
   return self
@@ -80,12 +82,11 @@ function ProgressBar:draw()
       pbx = self.width - pbw
     elseif string.lower(self.mode) == "topbottom" then
       pbh = (self.height - 2) * ratio
+      pby = self.height - pbh
     elseif string.lower(self.mode) == "bottomtop" then
       pbh = (self.height - 2) * ratio
-      pby = self.height - pbh
     end
 
---    local barsize = (self.width - 2) * (self.value / self.max)
     if self.imgback and self.imgbar then
       love.graphics.draw(self.imgback, self.x, self.y)
       self.quad:setViewport(pbx, pby, pbw, pbh, self.width, self.height)
@@ -93,7 +94,7 @@ function ProgressBar:draw()
     else
       self:drawPanel()
       love.graphics.setColor(self.frontcolor)
-      love.graphics.rectangle("fill", self.x + 1, self.y + 1, barsize, self.height - 2)
+      love.graphics.rectangle("fill", self.x + pbx + 1, self.y + pby + 1, pbw - 2, pbh - 2)
     end
     love.graphics.setColor(1,1,1,1)
   end
@@ -176,6 +177,12 @@ function ProgressBar:setValue(Value)
   self.value = Value
 end
 
+--[[
+proto ProgressBar:setMode(Mode)
+.D This function sets the drawing mode. It can be one of those: LeftRight, RightLeft, TopBottom or BottomTop.
+.p Mode
+Mode to how to draw the progress bar.
+]]--
 function ProgressBar:setMode(Mode)
   if string.lower(Mode) == "leftright" or string.lower(Mode) == "rightleft" or string.lower(Mode) == "topbottom" or string.lower(Mode) == "bottomtop" then
     self.mode = Mode

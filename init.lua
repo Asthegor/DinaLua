@@ -1,6 +1,6 @@
 local Dina = {
   _TITLE       = 'Dina - Game Engine (c)',
-  _VERSION     = 'v3.2.0',
+  _VERSION     = 'v3.4.0',
   _URL         = 'https://dina.lacombedominique.com/',
   _LICENSE     = [[
 Copyright (c) 2019-2022 LACOMBE Dominique
@@ -122,10 +122,14 @@ function Dina:draw(WithState)
 end
 
 --[[
-proto Dina:update(dt)
+proto Dina:update(dt, WithState)
 .D This function starts the update function of the current state (if it has been defined). Otherwise, this function calls the update function of all loaded components.
+.D For the translation:
+.D If a language has been defined, the content of the Text components are translated using the datas in the language file if found; otherwise, the content remains the same.
 .P dt
 Delta time.
+.P WithState
+Indicates if the framework uses states or not. If true, launch the update function of the given state; otherwise, launch the update of the components.
 ]]--
 local maxdt = 1/60
 function Dina:update(dt, WithState)
@@ -234,6 +238,8 @@ end
 --[[
 proto Dina:addState(State, File, Load)
 .D This function adds a new report with the supplied file. If the report already exists, no changes are made.
+.P State
+Name of the state.
 .P File
 Path and file name without extension.
 .P Load
@@ -327,6 +333,13 @@ function Dina:addLanguage(Language, File)
   self.translator:loadFile(Language, File)
 end
 
+--[[
+proto Dina:setLanguage(Language)
+.D This function sets the given language as the current language.
+.P Language
+Language to use for the translation.
+]]--
+
 function Dina:setLanguage(Language)
   if self.translator:setLanguage(Language) then
     self.currentlanguage = Language
@@ -335,16 +348,31 @@ function Dina:setLanguage(Language)
   end
 end
 
+--[[
+proto Dina:getCurrentLanguage()
+.D This function returns the current language or nil if no language has been added.
+.R Returns the current language (could be nil).
+]]--
 function Dina:getCurrentLanguage()
   return self.currentlanguage
 end
 
+--[[
+proto Dina:getNextLanguage()
+.D This function returns the next language or nil if no language has been added.
+.R Returns the next language (could be nil).
+]]--
 function Dina:getNextLanguage()
   return self.translator:getNextLanguage()
 end
 
-function Dina:translate(Text)
-  return self.translator:getTranslation(self.currentlanguage, Text)
+--[[
+proto Dina:translate(KeyText)
+.D This function returns translation of the given key in the current language.
+.R Returns the translation of the given key in the current language.
+]]--
+function Dina:translate(KeyText)
+  return self.translator:getTranslation(self.currentlanguage, KeyText)
 end
 
 --[[

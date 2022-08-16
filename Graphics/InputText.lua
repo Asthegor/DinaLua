@@ -13,19 +13,18 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(InputText, {__index = Parent})
 
--- Déclaration des éléments supplémentaires
+-- Additional elements
 local Text = Dina:require("Text")
 
--- Function invert the focus or not on the inputtext
+-- Local functions
 local function Focus(InputText)
   InputText.focus = not InputText.focus
 end
-
 
 --[[
 proto const InputText.new(X, Y, Width, Height, TextColor, FontName, FontSize, BorderColor, BackColor, MaxLength, PlaceHolder, PlacerHolderColor)

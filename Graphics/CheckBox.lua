@@ -13,7 +13,7 @@ Permission is granted to anyone to use this software for any purpose, including 
 ]]
 }
 
--- Déclaration du parent
+-- Parent
 local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(CheckBox, {__index = Parent})
@@ -60,12 +60,14 @@ function CheckBox:draw()
         love.graphics.setColor(self.color)
         love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
       else
+        --TODO: Use of Image component
         love.graphics.draw(self.imgpressed, self.x, self.y)
       end
     else
       if self.img == nil then
         self:drawPanel()
       else
+        --TODO: Use of Image component
         love.graphics.draw(self.img, self.x, self.y)
       end
     end
@@ -93,6 +95,7 @@ Image used when the checkbox is not checked.
 Image used when the checkbox is checked.
 ]]--
 function CheckBox:setImages(Unchecked, Checked)
+  --TODO: Use of Image component
   if Checked == nil then Checked = Unchecked end
   self.img = Unchecked
   self.imgpressed = Checked
@@ -101,7 +104,7 @@ function CheckBox:setImages(Unchecked, Checked)
 end
 
 --[[
-proto CheckBox:SetState(State)
+proto CheckBox:setState(State)
 .D This function sets the current state of the checkbox.
 .P State
 State of the checkbox. True for check, false otherwise.

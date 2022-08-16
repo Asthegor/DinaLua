@@ -37,7 +37,6 @@ Path of the file containing the sound.
 .P Type
 Type of the sound : 'static', 'stream' or 'queue'
 ]]--
-local Dina = require("Dina")
 function SoundManager:add(File, Type)
   local sound = Dina("Sound", File, Type)
   if sound then
@@ -102,6 +101,7 @@ function SoundManager:update(dt)
   end
 end
 
+-- System functions
 function SoundManager:toString(NoTitle)
   local str = ""
   if not NoTitle then
@@ -117,9 +117,7 @@ function SoundManager:toString(NoTitle)
   end
   return str
 end
--- System functions
 SoundManager.__tostring = function(SoundManager, NoTitle) return SoundManager:toString(NoTitle) end
 SoundManager.__index = SoundManager
 SoundManager.__name = "SoundManager"
-
 return SoundManager

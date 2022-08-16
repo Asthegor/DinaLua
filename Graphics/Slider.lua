@@ -53,7 +53,7 @@ function Slider.new(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, O
   self.slidercolor = SliderColor or {1,1,1,1}
   local cursorx, cursory, cursorw, cursorh
   if self.orientation == "vertical" then
-    self.thin = self.width * .2
+    self.thin = self.width * 0.2
     cursorw = self.width
     cursorh = self.thin
     self.step = (self.height - self.thin/2) / Max
@@ -64,7 +64,7 @@ function Slider.new(X, Y, Width, Height, Value, Max, SliderColor, CursorColor, O
     self.ws = self.thin
     self.hs = self.height
   else
-    self.thin = self.height * .2
+    self.thin = self.height * 0.2
     cursorw = self.thin
     cursorh = self.height
     self.step = (self.width - self.thin/2) / Max
