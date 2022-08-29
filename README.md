@@ -106,7 +106,7 @@ Follow all the news about Dina :
 
 __Installation__
 
-Download the engine at the following address
+Download the engine at the following address:
 https://dina.lacombedominique.com/download.php?file=DinaLastVersion
 
 Save the archive and unzip the content of the archive in your game directory.
