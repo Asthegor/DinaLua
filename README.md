@@ -37,29 +37,29 @@ Vous devriez obtenir un répertoire nommé "Dina" dans le répertoire de votre j
 
 Créer un fichier main.lua dans le répertoire de votre jeu puis copier/coller le code ci-dessous dedans :
 
--- The lines below is used for debugging.
-if arg[#arg] == "-debug" then require("mobdebug").start() end
-io.stdout:setvbuf('no')
-love.graphics.setDefaultFilter("nearest")
-
-
--- Dina Game Engine
-local Dina = require('Dina')
-
-function love.load()
-  -- Ajouter les langues à l'aide de Dina:addLanguage
-
-  -- Ajouter les états à l'aide de Dina:addState
-
-  -- Définir l'état de démarrage à l'aide de Dina:setState
-end
-function love.update(dt)
-  Dina:update(dt)
-end
-function love.draw()
-  Dina:draw()
-end
-
+-- The lines below is used for debugging.\r
+if arg[#arg] == "-debug" then require("mobdebug").start() end\r
+io.stdout:setvbuf('no')\r
+love.graphics.setDefaultFilter("nearest")\r
+\r
+\r
+-- Dina Game Engine\r
+local Dina = require('Dina')\r
+\r
+function love.load()\r
+  -- Ajouter les langues à l'aide de Dina:addLanguage\r
+\r
+  -- Ajouter les états à l'aide de Dina:addState\r
+\r
+  -- Définir l'état de démarrage à l'aide de Dina:setState\r
+end\r
+function love.update(dt)\r
+  Dina:update(dt)\r
+end\r
+function love.draw()\r
+  Dina:draw()\r
+end\r
+\r
 
 Pour plus d'explications, veuillez vous référer au tutoriel ci-dessous :
 https://dina.lacombedominique.com/tutorials/
