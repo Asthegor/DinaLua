@@ -1,9 +1,9 @@
 local CheckBox = {
   _TITLE       = 'Dina Game Engine - CheckBox',
-  _VERSION     = '2.0.4',
+  _VERSION     = '3.0.0',
   _URL         = 'https://dina.lacombedominique.com/documentation/gui/checkbox/',
   _LICENSE     = [[
-Copyright (c) 2020 LACOMBE Dominique
+Copyright (c) 2022 LACOMBE Dominique
 ZLIB Licence
 This software is provided 'as-is', without any express or implied warranty. In no event will the authors be held liable for any damages arising from the use of this software.
 Permission is granted to anyone to use this software for any purpose, including commercial applications, and to alter it and redistribute it freely, subject to the following restrictions:
@@ -17,6 +17,12 @@ Permission is granted to anyone to use this software for any purpose, including 
 local Dina = require("Dina")
 local Parent = Dina:require("Panel")
 setmetatable(CheckBox, {__index = Parent})
+
+-- Local functions
+local function OnPressedEvent()
+end
+local function OnHoverEvent()
+end
 
 --[[
 proto const CheckBox.new(X, Y, Width, Height, Color, Thickness, Z)
@@ -38,12 +44,14 @@ Z-Order of the checkbox.
 .R Return an instance of CheckBox object.
 ]]--
 function CheckBox.new(X, Y, Width, Height, Color, Thickness, Z)
-  local self = setmetatable(Parent.New(X, Y, Width, Height, Color, nil, nil, Z, Thickness), CheckBox)
-  self:SetColor(Color)
+  local self = setmetatable(Parent.new(X, Y, Width, Height, Color, nil, nil, Z, Thickness), CheckBox)
+  self:setColor(Color)
   self.pressed = false
   self.oldstate = false
   self.img = nil
   self.imgpressed = nil
+  self:setEvent("hover", OnHoverEvent)
+  self:setEvent("pressed", OnPressedEvent)
   return self
 end
 
@@ -60,15 +68,13 @@ function CheckBox:draw()
         love.graphics.setColor(self.color)
         love.graphics.rectangle("fill", self.x, self.y, self.width, self.height)
       else
-        --TODO: Use of Image component
-        love.graphics.draw(self.imgpressed, self.x, self.y)
+        self.imgpressed:draw(self.color)
       end
     else
       if self.img == nil then
         self:drawPanel()
       else
-        --TODO: Use of Image component
-        love.graphics.draw(self.img, self.x, self.y)
+        self.img:draw(self.color)
       end
     end
     love.graphics.setColor(1,1,1,1)
@@ -90,17 +96,29 @@ end
 proto CheckBox:setImages(Unchecked, Checked)
 .D This function sets the images for unchecked and checked status and adjusts the width and height of the component.
 .P Unchecked
-Image used when the checkbox is not checked.
+Path of the image used when the checkbox is not checked.
 .P Checked
-Image used when the checkbox is checked.
+Path of the image used when the checkbox is checked.
 ]]--
 function CheckBox:setImages(Unchecked, Checked)
-  --TODO: Use of Image component
   if Checked == nil then Checked = Unchecked end
-  self.img = Unchecked
-  self.imgpressed = Checked
-  self.width = math.max(Unchecked:getWidth(), Checked:getWidth()) + self.font:getWidth(" ") + self.twidth
-  self.height = math.max(Unchecked:getHeight(), Checked:getHeight(), self.font:getHeight(1))
+  self.img = Dina("Image", Unchecked, self.x, self.y)
+  Dina:removeComponent(self.img)
+  self.imgpressed = Dina("Image", Checked, self.x, self.y)
+  Dina:removeComponent(self.imgpressed)
+  
+  local uw, uh = self.imgpressed:getDimensions()
+  local cw, ch = self.img:getDimensions()
+  self.width = math.max(uw, cw)
+  self.height = math.max(uh, uh)
+  
+  local ix = self.x + (self.width - cw) / 2
+  local iy = self.y + (self.height - ch) / 2
+  self.img:setPosition(ix, iy)
+  
+  ix = self.x + (self.width - uw) / 2
+  iy = self.y + (self.height - uh) / 2
+  self.imgpressed:setPosition(ix, iy)
 end
 
 --[[
