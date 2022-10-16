@@ -151,7 +151,7 @@ function Controller:update(dt)
         end
       end
       if res then
-        action.Object[action.FctName](action.Object, dir, dt, keybtn)
+        action.Object[action.FctName](action.Object, math.abs(dir), dt, keybtn)
         res = false
       end
     end

@@ -113,6 +113,8 @@ function Gamepad:button_down(JoystickId, Button, Direction)
       state = false
       value = 0
     end --value ~= 0
+  else
+    value = state and 1 or 0
   end --pcall_res
   return state, value
 end
@@ -150,6 +152,8 @@ function Gamepad:button_up(JoystickId, Button, Direction)
         end
       end --state and Direction ~= 0
     end --value ~= 0
+  else
+    value = state and 1 or 0
   end --pcall_res
   return state, value
 end
